@@ -1,0 +1,6 @@
+{
+  "name": "Smart Mechatronics Doctor | دكتور الميكاترونكس الذكي",
+  "description": "منصة تعليمية هندسية ذكية متكاملة للميكاترونكس تضم أستاذًا افتراضيًا تفاعليًا، ومختبرات محاكاة دوائر وروبوتات وتحكم، واستوديو للدروس المرئية، وحاسبات هندسية، وأدوات ذكاء اصطناعي متقدمة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
