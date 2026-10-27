@@ -3,11 +3,12 @@ export type Language = 'ar' | 'en';
 export type MainTab =
   | 'home'
   | 'serway-physics'
-  | 'professors'
   | 'lesson-studio'
-  | 'ai-toolkit'
+  | 'my-lectures'
+  | 'professors'
   | 'labs'
   | 'calculators'
+  | 'ai-toolkit'
   | 'library'
   | 'quizzes'
   | 'student-profile'
@@ -105,6 +106,23 @@ export interface StudentProfile {
   bookmarks: { id: string; title: string; type: string; urlOrRef: string }[];
   soundEnabled: boolean;
   speechRate: number;
+  subscriptionTier?: 'free' | 'basic' | 'premium_pro';
+  subscriptionStatus?: 'active' | 'expired' | 'trial';
+  subscriptionExpiresAt?: string;
+}
+
+export interface VoiceConsentSettings {
+  consentStatus: 'verified_approved' | 'pending_authorization' | 'academic_simulation';
+  consentDocumentUrl?: string;
+  authorizedByName?: string;
+  authorizedDate?: string;
+  voiceCloningProvider?: 'elevenlabs' | 'gemini_tts' | 'custom_api' | 'browser_speech';
+  voiceCloningApiKey?: string;
+  voiceCloningVoiceId?: string;
+  referenceVideoUrl: string;
+  referenceSpeakerName: string;
+  referenceCadence: string;
+  targetPaceWordsPerMin: number;
 }
 
 export interface AdminSettings {
@@ -118,6 +136,7 @@ export interface AdminSettings {
   maintenanceMode: boolean;
   registeredUsersCount: number;
   systemLogs: { timestamp: string; action: string; level: 'info' | 'warn' | 'error' }[];
+  voiceSettings?: VoiceConsentSettings;
 }
 
 export interface LibraryDocument {
@@ -131,4 +150,60 @@ export interface LibraryDocument {
   tags: string[];
   contentSnippet?: string;
   isDemo?: boolean;
+  accessTier?: 'free' | 'basic' | 'premium_pro';
+  verifiedFileName?: string;
+  verifiedPageRange?: string;
+  courseId?: string;
+  isOwnerApproved?: boolean;
+}
+
+export interface SavedLecture {
+  id: string;
+  createdAt: string;
+  doctorName?: string;
+  specialty?: string;
+  university?: string;
+  subject: string;
+  topic: string;
+  level: 'beginner' | 'university' | 'advanced' | string;
+  length: 'brief' | 'medium' | 'detailed' | string;
+  sourceType: 'general' | 'pdf' | 'image' | 'notes';
+  sourceFileName?: string;
+  sourceFileSize?: number;
+  extractedSnippet?: string;
+  scenes: WhiteboardScene[];
+  solvedExample?: {
+    problem: string;
+    solutionSteps: string[];
+    finalAnswer: string;
+  };
+  miniQuiz?: {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+  }[];
+  summary?: string;
+  studentNotes?: string;
+  lastProgressStep?: number;
+}
+
+export interface UniversalLessonInput {
+  doctorName?: string;
+  specialty?: string;
+  university?: string;
+  subject: string;
+  topic: string;
+  level: 'beginner' | 'university' | 'advanced';
+  length: 'brief' | 'medium' | 'detailed';
+  actionIntent?: 'brief' | 'detailed' | 'laws' | 'solve_example' | 'explain_page' | 'quiz_me';
+  uploadedFile?: {
+    name: string;
+    size: number;
+    type: string;
+    base64Data?: string;
+    extractedText?: string;
+    selectedPages?: string;
+  };
+  directNotes?: string;
 }

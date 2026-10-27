@@ -15,6 +15,7 @@ import {
   Globe,
   Bot,
   Zap,
+  FolderOpen,
 } from 'lucide-react';
 
 interface Props {
@@ -29,9 +30,10 @@ export const Navbar: React.FC<Props> = ({ activeTab, onSelectTab, lang, onToggle
 
   const navItems: { id: MainTab; nameAr: string; nameEn: string; icon: React.FC<any> }[] = [
     { id: 'home', nameAr: 'الرئيسية', nameEn: 'Home', icon: Bot },
+    { id: 'lesson-studio', nameAr: 'استوديو الدروس', nameEn: 'Studio', icon: Clapperboard },
+    { id: 'my-lectures', nameAr: 'محاضراتي', nameEn: 'My Lectures', icon: FolderOpen },
     { id: 'serway-physics', nameAr: 'شرح كتاب Serway', nameEn: 'Serway Physics', icon: BookOpen },
     { id: 'professors', nameAr: 'الأستاذ والسبورة', nameEn: 'Professors', icon: GraduationCap },
-    { id: 'lesson-studio', nameAr: 'استوديو الدروس', nameEn: 'Studio', icon: Clapperboard },
     { id: 'labs', nameAr: 'المختبرات والمحاكاة', nameEn: 'Labs', icon: FlaskConical },
     { id: 'calculators', nameAr: 'الحاسبات الهندسية', nameEn: 'Calculators', icon: Calculator },
     { id: 'ai-toolkit', nameAr: 'الذكاء الاصطناعي', nameEn: 'AI Suite', icon: Sparkles },

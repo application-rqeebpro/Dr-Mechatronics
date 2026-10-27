@@ -1,0 +1,58 @@
+{
+  "name": "دكتور الميكاترونكس الذكي",
+  "short_name": "دكتور الميكاترونكس",
+  "description": "منصة تعليمية هندسية ذكية متكاملة لشرح المحاضرات، كتب الفيزياء الهندسية، مختبرات المحاكاة والسبورة التفاعلية لجميع التخصصات والجامعات.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020617",
+  "theme_color": "#0284c7",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["education", "engineering", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "استوديو الدروس الذكي",
+      "short_name": "الاستوديو",
+      "description": "شرح فوري لأي درس أو ملف مرفوع",
+      "url": "/?tab=lesson-studio",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "محاضراتي المحفوظة",
+      "short_name": "محاضراتي",
+      "description": "مراجعة المحاضرات السابقة والسبورة",
+      "url": "/?tab=my-lectures",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "فيزياء Serway الهندسية",
+      "short_name": "Serway",
+      "description": "شرح كتاب سيرواي والدوائر مع د. محمد الحبابي",
+      "url": "/?tab=serway-physics",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

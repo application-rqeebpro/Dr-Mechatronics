@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MainTab, Language, StudentProfile, AdminSettings } from './types';
+import { MainTab, Language, StudentProfile, AdminSettings, SavedLecture } from './types';
 import { Navbar } from './components/Navbar';
 import { HomeHero } from './components/Home/HomeHero';
 import { VirtualWhiteboard } from './components/VirtualProfessor/VirtualWhiteboard';
 import { LessonStudio } from './components/LessonStudio/LessonStudio';
+import { MyLecturesHub } from './components/MyLectures/MyLecturesHub';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { LabsHub } from './components/Labs/LabsHub';
 import { CalculatorsHub } from './components/Calculators/CalculatorsHub';
 import { AIToolkitHub } from './components/AIToolkit/AIToolkitHub';
@@ -17,6 +19,7 @@ import { Bot, Heart, Shield, Terminal, Waves, Cpu, Zap, BookOpen } from 'lucide-
 export default function App() {
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [lang, setLang] = useState<Language>('ar');
+  const [selectedLectureForStudio, setSelectedLectureForStudio] = useState<SavedLecture | null>(null);
 
   // Student Profile state
   const [profile, setProfile] = useState<StudentProfile>(() => {
@@ -87,8 +90,16 @@ export default function App() {
     localStorage.setItem('mechatronics_admin_settings', JSON.stringify(updated));
   };
 
+  const handleOpenLectureInStudio = (lecture: SavedLecture) => {
+    setSelectedLectureForStudio(lecture);
+    setActiveTab('lesson-studio');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white">
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
+
       {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -101,8 +112,18 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'home' && <HomeHero onNavigate={setActiveTab} lang={lang} />}
         {activeTab === 'serway-physics' && <SerwayPhysicsHub />}
-        {activeTab === 'professors' && <VirtualWhiteboard />}
-        {activeTab === 'lesson-studio' && <LessonStudio />}
+        {activeTab === 'professors' && (
+          <VirtualWhiteboard onNavigateToStudio={() => setActiveTab('lesson-studio')} />
+        )}
+        {activeTab === 'lesson-studio' && (
+          <LessonStudio
+            initialLectureToOpen={selectedLectureForStudio}
+            onClearInitialLecture={() => setSelectedLectureForStudio(null)}
+          />
+        )}
+        {activeTab === 'my-lectures' && (
+          <MyLecturesHub onOpenLecture={handleOpenLectureInStudio} />
+        )}
         {activeTab === 'labs' && <LabsHub />}
         {activeTab === 'calculators' && <CalculatorsHub />}
         {activeTab === 'ai-toolkit' && <AIToolkitHub />}

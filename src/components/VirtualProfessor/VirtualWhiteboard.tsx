@@ -1,482 +1,466 @@
 import React, { useState, useEffect } from 'react';
-import { Professor, WhiteboardScene } from '../../types';
-import { getStoredProfessors } from '../../data/professors';
-import { getCourseLectureScenes } from '../../data/courseLectures';
+import { WhiteboardScene } from '../../types';
+import { MathView } from '../SerwayPhysics/MathView';
+import { WhiteboardDiagram } from '../SerwayPhysics/WhiteboardDiagram';
+import { VoiceSettingsControl } from '../VoiceSettings/VoiceSettingsControl';
+import { AudioSpeechEngine, VoicePersona } from '../../utils/audioSpeechEngine';
 import {
+  GraduationCap,
+  Sparkles,
+  BookOpen,
+  Building2,
+  Layers,
   Play,
   Pause,
-  SkipForward,
-  SkipBack,
+  RotateCcw,
   Volume2,
   VolumeX,
-  GraduationCap,
-  MessageSquare,
-  Search,
-  BookOpen,
-  Sparkles,
+  Sliders,
+  ArrowRight,
+  ArrowLeft,
   CheckCircle2,
-  ChevronLeft,
-  Tv,
+  Info,
+  Square,
+  ChevronRight,
+  ExternalLink,
 } from 'lucide-react';
 
 interface Props {
-  initialProfessorId?: string;
-  initialCourse?: string;
-  onNavigateToStudio?: (course: string, profName: string) => void;
-  onAskAiAboutCourse?: (course: string) => void;
+  onNavigateToStudio?: (course?: string, profName?: string) => void;
 }
 
-export const VirtualWhiteboard: React.FC<Props> = ({
-  initialProfessorId = 'prof-alhababi',
-  initialCourse,
-  onNavigateToStudio,
-  onAskAiAboutCourse,
-}) => {
-  const [professorsList] = useState<Professor[]>(() => getStoredProfessors());
-  const [searchQuery, setSearchQuery] = useState<string>('');
+export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
+  const audioEngine = AudioSpeechEngine.getInstance();
 
-  const [selectedProf, setSelectedProf] = useState<Professor>(() => {
-    return (
-      professorsList.find((p) => p.id === initialProfessorId) ||
-      professorsList[0]
-    );
-  });
+  // Dynamic user-driven professor and course fields (empty by default)
+  const [doctorName, setDoctorName] = useState<string>('');
+  const [specialty, setSpecialty] = useState<string>('');
+  const [university, setUniversity] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [topic, setTopic] = useState<string>('');
 
-  const [selectedCourse, setSelectedCourse] = useState<string>(() => {
-    if (initialCourse && selectedProf.courses.includes(initialCourse)) {
-      return initialCourse;
-    }
-    return selectedProf.courses[0] || '';
-  });
-
-  const [level, setLevel] = useState<'beginner' | 'university' | 'advanced'>('university');
-  const [currentSceneIndex, setCurrentSceneIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  // Voice settings state
+  const [voicePersona, setVoicePersona] = useState<VoicePersona>('male');
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
   const [speechRate, setSpeechRate] = useState<number>(1.0);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [drawnLength, setDrawnLength] = useState<number>(0);
+  const [showVoiceSettings, setShowVoiceSettings] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  // Filtered professors by Doctor Name or Course Name
-  const filteredProfessors = professorsList.filter((prof) => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return true;
-    const matchName =
-      prof.name.toLowerCase().includes(q) ||
-      prof.nameEn.toLowerCase().includes(q);
-    const matchCourse = prof.courses.some((c) =>
-      c.toLowerCase().includes(q)
-    );
-    return matchName || matchCourse;
-  });
+  // Whiteboard scenes state
+  const [currentSceneIndex, setCurrentSceneIndex] = useState<number>(0);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [scenes, setScenes] = useState<WhiteboardScene[]>([
+    {
+      title: 'المفهوم الأساسي والتعريف الهندسي',
+      whiteboardText: `## مرحبًا بكم في السبورة الذكية\n\n* اكتب اسم دكتورك والمادة وعنوان الدرس في الحقول أعلاه.\n* اضغط على **«تحديث وتوليد الشرح على السبورة»**.\n\n$$Z = \\sqrt{R^2 + (X_L - X_C)^2}, \\quad \\Sigma \\vec{F} = m \\vec{a}$$`,
+      professorSpeech: 'أهلاً بكم في السبورة التفاعلية الذكية. يمكنك كتابة اسم دكتورك ومادتك وموضوع الدرس في الحقول أعلاه لبدء الشرح بصوت وتفاعل كامل.',
+      diagramType: 'circuit',
+    },
+  ]);
 
-  // Dynamic lecture scenes for the selected doctor & course
-  const activeScenes: WhiteboardScene[] = React.useMemo(() => {
-    return getCourseLectureScenes(selectedCourse, selectedProf.name);
-  }, [selectedCourse, selectedProf.name]);
-
-  const currentScene = activeScenes[currentSceneIndex] || activeScenes[0];
-
-  // When selected professor changes, update course to their first bound course
-  const handleSelectProfessor = (prof: Professor) => {
-    setSelectedProf(prof);
-    setSelectedCourse(prof.courses[0]);
-    setCurrentSceneIndex(0);
-    setIsPlaying(false);
-  };
-
-  // When a course is selected
-  const handleSelectCourse = (courseName: string) => {
-    setSelectedCourse(courseName);
-    setCurrentSceneIndex(0);
-    setIsPlaying(false);
-  };
-
-  // Marker drawing animation for whiteboard text
+  // Clean up audio on unmount
   useEffect(() => {
-    setDrawnLength(0);
-    if (!currentScene?.whiteboardText) return;
-    const textLength = currentScene.whiteboardText.length;
-    let current = 0;
-    const interval = setInterval(() => {
-      current += 8;
-      if (current >= textLength) {
-        setDrawnLength(textLength);
-        clearInterval(interval);
-      } else {
-        setDrawnLength(current);
+    return () => {
+      audioEngine.stop();
+    };
+  }, []);
+
+  // Fetch or generate dynamic lecture for the entered doctor & subject
+  const handleGenerateLecture = async () => {
+    setIsGenerating(true);
+    audioEngine.stop();
+    setIsSpeaking(false);
+    setIsPaused(false);
+
+    try {
+      const res = await fetch('/api/ai/universal-explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctorName: doctorName.trim(),
+          specialty: specialty.trim(),
+          university: university.trim(),
+          subject: subject.trim() || 'الهندسة العامة',
+          topic: topic.trim() || 'المفاهيم الهندسية الأساسية',
+          level: 'university',
+          length: 'medium',
+          actionIntent: 'detailed',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.lesson && data.lesson.scenes && data.lesson.scenes.length > 0) {
+        setScenes(data.lesson.scenes);
+        setCurrentSceneIndex(0);
       }
-    }, 18);
+    } catch (err) {
+      console.error('Failed to generate lecture in VirtualWhiteboard:', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-    return () => clearInterval(interval);
-  }, [currentScene]);
+  const currentScene = scenes[currentSceneIndex] || scenes[0];
 
-  // Web Speech API for Arabic voice narration
-  useEffect(() => {
-    if (!isPlaying || isMuted || !currentScene?.professorSpeech) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+  // Speech control
+  const handleTogglePlaySpeech = () => {
+    if (isSpeaking) {
+      if (isPaused) {
+        audioEngine.resume();
+        setIsPaused(false);
+      } else {
+        audioEngine.pause();
+        setIsPaused(true);
       }
       return;
     }
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(currentScene.professorSpeech);
-      utterance.rate = speechRate;
+    if (!currentScene) return;
 
-      const voices = window.speechSynthesis.getVoices();
-      const arVoice = voices.find((v) => v.lang.startsWith('ar'));
-      if (arVoice) {
-        utterance.voice = arVoice;
-      }
-      utterance.lang = 'ar-SA';
+    const textToSpeak = `${currentScene.title}. ${currentScene.professorSpeech}`;
+    audioEngine.speak(textToSpeak, {
+      persona: voicePersona,
+      voiceId: selectedVoiceId,
+      rate: speechRate,
+      onStart: () => {
+        setIsSpeaking(true);
+        setIsPaused(false);
+      },
+      onEnd: () => {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      },
+      onError: () => {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      },
+    });
+  };
 
-      utterance.onend = () => {
-        if (currentSceneIndex < activeScenes.length - 1) {
-          setTimeout(() => {
-            setCurrentSceneIndex((prev) => prev + 1);
-          }, 1400);
-        } else {
-          setIsPlaying(false);
-        }
-      };
+  const handleStopSpeech = () => {
+    audioEngine.stop();
+    setIsSpeaking(false);
+    setIsPaused(false);
+  };
 
-      window.speechSynthesis.speak(utterance);
-    }
-
-    return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [isPlaying, currentSceneIndex, speechRate, isMuted, currentScene, activeScenes.length]);
+  // Title formatted dynamically
+  const displayTitle = doctorName.trim()
+    ? `شرح الدكتور ${doctorName.trim()} - ${topic.trim() || subject.trim() || 'المحاضرة التفاعلية'}`
+    : topic.trim()
+    ? `${topic.trim()} - ${subject.trim() || 'الهندسة'}`
+    : 'السبورة التفاعلية الذكية';
 
   return (
     <div className="space-y-6">
-      {/* Search & Header Section */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-md">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+      {/* Header & Configuration Bar */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-1">
               <GraduationCap className="w-4 h-4" />
-              <span>هيئة التدريس الأكاديمية والمقررات الدراسية</span>
+              <span>الأستاذ الافتراضي والسبورة التفاعلية</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-100">
-              قائمة الدكاترة والمواد المعتمدة (Faculty & Courses)
+              شرح تفاعلي مباشر مع أي دكتور وجامعة
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              اختر الدكتور لعرض المواد الخاصة به، ثم اختر المادة للانتقال إلى الشرح التفاعلي والسبورة الذكية
+              أدخل اسم دكتورك ومادتك وعنوان الدرس؛ وسيتم إنشاء الشرح التفاعلي وكتابته على السبورة فورًا.
             </p>
           </div>
 
-          {/* Search by Doctor or Course */}
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 absolute start-3.5 top-3.5 text-slate-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث باسم الدكتور أو اسم المادة..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl ps-10 pe-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 shadow-inner"
-            />
-            {searchQuery && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                showVoiceSettings
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
+              }`}
+            >
+              <Sliders className="w-4 h-4 text-cyan-400" />
+              <span>إعدادات الصوت والنبرة</span>
+            </button>
+
+            {onNavigateToStudio && (
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute end-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
+                onClick={() => onNavigateToStudio(subject, doctorName)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-colors"
               >
-                ✕
+                <span>استوديو رفع الملفات</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
 
-        {/* 10 Equal-sized Doctor Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mt-5">
-          {filteredProfessors.map((prof) => {
-            const isSelected = selectedProf.id === prof.id;
-            return (
-              <div
-                key={prof.id}
-                onClick={() => handleSelectProfessor(prof)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative group ${
-                  isSelected
-                    ? 'bg-gradient-to-b from-cyan-950/60 to-slate-950 border-cyan-500 shadow-lg shadow-cyan-500/20 scale-[1.02]'
-                    : 'bg-slate-950/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
-                }`}
-              >
-                {isSelected && (
-                  <div className="absolute top-3 end-3 w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-md shadow-cyan-400 animate-pulse" />
-                )}
-
-                <div>
-                  {/* Doctor Avatar / Badge */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-900 border border-slate-700/80 flex items-center justify-center shrink-0 shadow-inner">
-                      {prof.isCustomImage ? (
-                        <img
-                          src={prof.avatar}
-                          alt={prof.name}
-                          className="w-full h-full object-cover object-top"
-                        />
-                      ) : (
-                        <span className="text-2xl">{prof.avatar}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[10px] text-slate-400 block truncate">
-                        {prof.title.split(' ')[0]}
-                      </span>
-                      <h3 className="font-bold text-sm text-slate-100 group-hover:text-cyan-300 transition-colors truncate">
-                        {prof.name}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Doctor's Bound Courses List */}
-                  <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
-                      المواد المرتبطة ({prof.courses.length}):
-                    </span>
-                    <div className="flex flex-col gap-1">
-                      {prof.courses.map((courseName, idx) => (
-                        <div
-                          key={idx}
-                          className={`px-2 py-1 rounded-lg text-[11px] font-mono truncate transition-colors ${
-                            isSelected && selectedCourse === courseName
-                              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                              : 'bg-slate-900 text-slate-300 border border-slate-800/60'
-                          }`}
-                        >
-                          • {courseName}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-2.5 border-t border-slate-900 text-[10px] text-cyan-400 font-medium flex items-center justify-between">
-                  <span>{isSelected ? 'المحدد حاليًا' : 'عرض المواد والشرح'}</span>
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredProfessors.length === 0 && (
-          <div className="text-center py-8 text-xs text-slate-500">
-            لم يتم العثور على أي دكتور أو مادة تطابق بحثك: "{searchQuery}"
+        {/* Voice Settings Panel */}
+        {showVoiceSettings && (
+          <div className="mt-4 animate-fadeIn">
+            <VoiceSettingsControl
+              persona={voicePersona}
+              selectedVoiceId={selectedVoiceId}
+              rate={speechRate}
+              onPersonaChange={setVoicePersona}
+              onVoiceIdChange={setSelectedVoiceId}
+              onRateChange={setSpeechRate}
+            />
           </div>
         )}
-      </div>
 
-      {/* Selected Doctor & Course Controller */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-950 border border-cyan-500/30 flex items-center justify-center">
-              {selectedProf.isCustomImage ? (
-                <img
-                  src={selectedProf.avatar}
-                  alt={selectedProf.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl">{selectedProf.avatar}</span>
-              )}
-            </div>
-            <div>
-              <span className="text-[11px] text-cyan-400 font-bold block uppercase">
-                الأستاذ المختار حاليًا
-              </span>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-                {selectedProf.name}
-                <span className="text-xs font-normal text-slate-400">({selectedProf.title})</span>
-              </h2>
-            </div>
+        {/* Inputs: Empty by default */}
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-300">اسم الدكتور (فارغ):</label>
+            <input
+              type="text"
+              value={doctorName}
+              onChange={(e) => setDoctorName(e.target.value)}
+              placeholder="اكتب اسم أي دكتور تريده..."
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+            />
           </div>
 
-          {/* Quick Course Selector Tabs for this Doctor ONLY */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-400 font-semibold me-1">اختر المادة للشرح:</span>
-            {selectedProf.courses.map((course) => (
-              <button
-                key={course}
-                onClick={() => handleSelectCourse(course)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all ${
-                  selectedCourse === course
-                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30 border border-cyan-400 scale-105'
-                    : 'bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                {course}
-              </button>
-            ))}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-300">التخصص:</label>
+            <input
+              type="text"
+              value={specialty}
+              onChange={(e) => setSpecialty(e.target.value)}
+              placeholder="مثال: هندسة ميكاترونكس، كهرباء..."
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-300">الجامعة (اختياري):</label>
+            <input
+              type="text"
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              placeholder="اسم الجامعة أو الكلية..."
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-300">اسم المادة:</label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="اكتب اسم المادة..."
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-300">عنوان الدرس:</label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="عنوان الموضوع أو المسألة..."
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+            />
           </div>
         </div>
 
-        {/* Whiteboard Stage */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-stretch">
-          {/* Left: Doctor Profile & Audio Speech */}
-          <div className="lg:col-span-4 flex flex-col justify-between bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
-            <div>
-              <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900 aspect-16/10 flex items-center justify-center group">
-                {selectedProf.isCustomImage ? (
-                  <img
-                    src={selectedProf.avatar}
-                    alt={selectedProf.name}
-                    className="w-full h-full object-cover object-top"
-                  />
-                ) : (
-                  <div className="text-center p-4">
-                    <span className="text-5xl">{selectedProf.avatar}</span>
-                    <h4 className="text-sm font-bold text-slate-200 mt-2">{selectedProf.name}</h4>
-                    <p className="text-xs text-slate-400">{selectedProf.specialty}</p>
-                  </div>
-                )}
+        {/* Generate / Update Button */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800">
+          <div className="text-xs text-slate-400">
+            {doctorName.trim()
+              ? `الاسم المعتمد للشرح: د. ${doctorName.trim()}`
+              : 'شرح الأستاذ الافتراضي الذكي'}
+          </div>
 
-                {isPlaying && (
-                  <div className="absolute bottom-2.5 start-2.5 bg-cyan-600/90 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-sm animate-pulse">
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    شرح صوتي نشط الآن
-                  </div>
-                )}
+          <button
+            disabled={isGenerating}
+            onClick={handleGenerateLecture}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/20 transition-all"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isGenerating ? 'جاري بناء الشرح...' : 'تحديث وتوليد الشرح على السبورة'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* The Whiteboard Frame */}
+      <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+        {/* Controls Header */}
+        <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 text-xs gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
+            <h3 className="font-bold text-white text-sm truncate max-w-md">
+              {displayTitle}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTogglePlaySpeech}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all ${
+                isSpeaking
+                  ? isPaused
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-emerald-600 text-white animate-pulse'
+                  : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md'
+              }`}
+            >
+              {isSpeaking ? (isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />) : <Volume2 className="w-3.5 h-3.5" />}
+              <span>{isSpeaking ? (isPaused ? 'استئناف' : 'إيقاف مؤقت') : 'استمع إلى الشرح'}</span>
+            </button>
+
+            {isSpeaking && (
+              <button
+                onClick={handleStopSpeech}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors"
+                title="إيقاف تام"
+              >
+                <Square className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Whiteboard Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 my-5">
+          {/* Virtual Doctor Avatar Card */}
+          <div className="lg:col-span-3 flex flex-col items-center justify-start text-center border-b lg:border-b-0 lg:border-l border-slate-800/80 pb-4 lg:pb-0 lg:pl-4">
+            <div className="relative group">
+              <img
+                src="/assets/aistudio/855835000_1444226130442451_3607535876634852799_n__1__65712c61.webp"
+                alt="Doctor Avatar"
+                className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl object-cover border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10"
+              />
+              <div className="absolute -bottom-2 -right-2 p-1.5 rounded-full bg-cyan-600 text-white shadow">
+                <GraduationCap className="w-4 h-4" />
               </div>
+            </div>
 
-              {/* Current Active Course Badge */}
-              <div className="mt-3.5 p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">المادة المشروحة:</span>
-                  <span className="text-xs font-mono font-bold text-cyan-300">{selectedCourse}</span>
+            <h4 className="font-bold text-sm text-white mt-3">
+              {doctorName.trim() ? `د. ${doctorName.trim()}` : 'الأستاذ الافتراضي'}
+            </h4>
+            <span className="text-[10px] text-slate-400 block font-mono">
+              (شخصية أكاديمية افتراضية)
+            </span>
+
+            <p className="text-[11px] text-cyan-400 font-semibold mt-1">
+              {specialty.trim() || subject.trim() || 'الهندسة والميكاترونكس'}
+            </p>
+            {university.trim() && (
+              <p className="text-[10px] text-slate-400 mt-0.5">{university.trim()}</p>
+            )}
+
+            <div className="mt-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 text-start leading-relaxed w-full">
+              <div className="flex items-center gap-1 text-slate-300 font-bold mb-0.5">
+                <Info className="w-3 h-3 text-cyan-400" />
+                <span>توضيح أكاديمي:</span>
+              </div>
+              هذه الشخصية تمثيل افتراضي ذكي لشرح المحاضرة، وليست الدكتور الحقيقي، ولا تنسب إليه أقوالًا أو تسجيلات فعلية.
+            </div>
+
+            {currentScene?.professorSpeech && (
+              <div className="mt-3 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-xs text-cyan-200 text-start leading-relaxed shadow w-full">
+                <div className="text-[10px] font-bold text-cyan-400 mb-1 flex items-center justify-between">
+                  <span>شرح الأستاذ:</span>
+                  <Volume2 className="w-3 h-3 text-cyan-400" />
                 </div>
-                <span className="text-[10px] font-bold bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800/50">
-                  معتمدة
+                <p className="italic">"{currentScene.professorSpeech}"</p>
+              </div>
+            )}
+          </div>
+
+          {/* Whiteboard Math & Content */}
+          <div className="lg:col-span-9 space-y-4">
+            <div className="bg-slate-950 p-6 rounded-2xl border-2 border-slate-800 shadow-inner min-h-[300px]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 text-xs mb-4">
+                <span className="font-bold text-cyan-400">
+                  المشهد {currentSceneIndex + 1} من {scenes.length}: {currentScene.title}
+                </span>
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {voicePersona === 'female' ? 'صوت أنثوي' : voicePersona === 'male' ? 'صوت ذكوري' : 'صوت قياسي'}
                 </span>
               </div>
 
-              {/* Speech transcript */}
-              <div className="mt-3 p-3 bg-slate-900/60 border border-slate-800/80 rounded-xl text-xs leading-relaxed text-slate-300 flex items-start gap-2">
-                <MessageSquare className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-cyan-400 block mb-0.5">شرح الدكتور:</strong>
-                  <p className="italic font-sans">"{currentScene?.professorSpeech}"</p>
-                </div>
+              <div className="space-y-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-100">
+                {(currentScene.whiteboardText || '').split('\n\n').map((paragraph, pIdx) => {
+                  const trimmed = paragraph.trim();
+                  if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
+                    const cleanFormula = trimmed.slice(2, -2).trim();
+                    return (
+                      <div key={pIdx} className="my-3 p-3 bg-slate-900 rounded-xl border border-cyan-500/30 text-center overflow-x-auto">
+                        <MathView math={cleanFormula} block={true} className="text-cyan-300 text-base sm:text-lg" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={pIdx} className="whitespace-pre-wrap text-slate-200">
+                      {trimmed}
+                    </div>
+                  );
+                })}
               </div>
+
+              {currentScene.diagramType && (
+                <div className="mt-5 p-3 rounded-xl bg-slate-900 border border-slate-800">
+                  <WhiteboardDiagram
+                    type={
+                      currentScene.diagramType === 'circuit'
+                        ? 'circuit_rlc'
+                        : currentScene.diagramType === 'response'
+                        ? 'kinematics_graph'
+                        : 'circuit_ohm'
+                    }
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Doctor Bio quote */}
-            <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[11px] text-slate-500">
-              <strong>رسالة الدكتور: </strong> {selectedProf.sampleQuote}
-            </div>
-          </div>
+            {/* Stepped Controls */}
+            <div className="flex items-center justify-between pt-2 text-xs">
+              <button
+                disabled={currentSceneIndex === 0}
+                onClick={() => {
+                  handleStopSpeech();
+                  setCurrentSceneIndex((p) => Math.max(0, p - 1));
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors"
+              >
+                <ArrowRight className="w-4 h-4" />
+                المشهد السابق
+              </button>
 
-          {/* Right: Interactive Whiteboard Canvas */}
-          <div className="lg:col-span-8 flex flex-col justify-between bg-slate-950 border-2 border-slate-800 rounded-2xl p-5 shadow-inner">
-            <div>
-              {/* Whiteboard Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-                  <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-                  <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                  <span className="font-mono text-slate-300 ps-2 font-bold truncate">
-                    {currentScene?.title || selectedCourse}
-                  </span>
-                </div>
-
-                {/* Voice Speed Controls */}
-                <div className="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-xs">
-                  <span className="text-slate-500 text-[10px]">السرعة:</span>
-                  {[0.75, 1.0, 1.25, 1.5].map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => setSpeechRate(rate)}
-                      className={`px-1.5 py-0.5 rounded font-mono text-[11px] ${
-                        speechRate === rate ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400'
-                      }`}
-                    >
-                      {rate}x
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Whiteboard Drawing Canvas Content */}
-              <div className="py-4 font-mono text-xs sm:text-sm leading-relaxed text-cyan-300 min-h-[260px] whitespace-pre-wrap select-none overflow-x-auto">
-                {currentScene?.whiteboardText.slice(0, drawnLength)}
-                {drawnLength < (currentScene?.whiteboardText.length || 0) && (
-                  <span className="inline-block w-2.5 h-4 bg-cyan-400 animate-pulse ms-1" />
-                )}
-              </div>
-            </div>
-
-            {/* Whiteboard Footer Playback Controls */}
-            <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={currentSceneIndex === 0}
-                  onClick={() => {
-                    setCurrentSceneIndex((prev) => Math.max(0, prev - 1));
-                    setIsPlaying(false);
-                  }}
-                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 disabled:opacity-40 transition-colors"
-                  title="المشهد السابق"
-                >
-                  <SkipBack className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-lg ${
-                    isPlaying
-                      ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20'
-                      : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-600/20'
-                  }`}
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  {isPlaying ? 'إيقاف الشرح الصوتي' : 'استماع لشرح الدكتور'}
-                </button>
-
-                <button
-                  disabled={currentSceneIndex === activeScenes.length - 1}
-                  onClick={() => {
-                    setCurrentSceneIndex((prev) => Math.min(activeScenes.length - 1, prev + 1));
-                    setIsPlaying(false);
-                  }}
-                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 disabled:opacity-40 transition-colors"
-                  title="المشهد التالي"
-                >
-                  <SkipForward className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`p-2 rounded-xl border transition-colors ${
-                    isMuted
-                      ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                  title={isMuted ? 'إلغاء كتم الصوت' : 'كتم الصوت'}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {/* Scenes dots */}
               <div className="flex items-center gap-1.5">
-                {activeScenes.map((_, idx) => (
+                {scenes.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
+                      handleStopSpeech();
                       setCurrentSceneIndex(idx);
-                      setIsPlaying(false);
                     }}
-                    className={`h-2 rounded-full transition-all ${
-                      currentSceneIndex === idx ? 'w-6 bg-cyan-400' : 'w-2 bg-slate-800'
+                    className={`h-2.5 rounded-full transition-all ${
+                      currentSceneIndex === idx
+                        ? 'w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50'
+                        : 'w-2.5 bg-slate-800 hover:bg-slate-700'
                     }`}
                   />
                 ))}
               </div>
+
+              <button
+                disabled={currentSceneIndex === scenes.length - 1}
+                onClick={() => {
+                  handleStopSpeech();
+                  setCurrentSceneIndex((p) => Math.min(scenes.length - 1, p + 1));
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors"
+              >
+                المشهد التالي
+                <ArrowLeft className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

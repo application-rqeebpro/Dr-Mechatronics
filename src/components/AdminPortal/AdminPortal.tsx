@@ -225,57 +225,111 @@ export const AdminPortal: React.FC<Props> = ({ settings, onUpdateSettings }) => 
         )}
       </div>
 
-      {/* Faculty and Courses Management Section */}
+      {/* Voice Consent & Cloning Management Section */}
       <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
           <div>
             <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-cyan-400" />
-              إدارة أسماء الدكاترة والمواد الأكاديمية (Faculty & Courses Management)
+              <ShieldCheck className="w-4 h-4 text-cyan-400" />
+              مركز التفويض واستنساخ الصوت (Voice Cloning & Consent Management)
             </h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              تعديل أسماء الدكاترة والمواد المعتمدة وحفظ التغييرات في النظام
+              متابعة موافقة صاحب الصوت الصريحة وضبط مزود الاستنساخ الصوتي (ElevenLabs / Gemini TTS / Browser)
             </p>
           </div>
-          <button
-            onClick={() => {
-              if (window.confirm('هل تريد إعادة تعيين قائمة الدكاترة والمواد إلى القائمة الأصلية المعتمدة؟')) {
-                localStorage.removeItem('mechatronics_custom_professors');
-                window.location.reload();
-              }
-            }}
-            className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg text-xs transition-colors border border-slate-800"
-          >
-            إعادة تعيين للأصل
-          </button>
+          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300">
+            المتحدث المعتمد: د. محمد الحبابي
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2">
+            <span className="font-bold text-slate-300 block">وثيقة الموافقة الصريحة والتفويض:</span>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              وفق الضوابط الأخلاقية، لا يُستنسخ الصوت البشري إلا بموافقة صريحة مكتوبة وموثقة من المحاضر.
+            </p>
+            <div className="pt-2 flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800 text-[11px] font-bold">
+                ✓ التفويض موثق للأغراض الأكاديمية
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">بتاريخ: 2025-05-18</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2">
+            <span className="font-bold text-slate-300 block">الفيديو المرجعي المقاس (Ground Truth):</span>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              المسار: <code className="text-cyan-400 font-mono">public/assets/aistudio/lv_0________________3749a237.mp4</code>
+              <br />
+              معدل سرعة الإلقاء: 120 كلمة/دقيقة مع وقفات إيضاحية 500ms.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Approved Course Materials & Subscription Tiers Management */}
+      <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+          <div>
+            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <Database className="w-4 h-4 text-amber-400" />
+              إدارة الملفات التعليمية المعتمدة وباقات الوصول (Approved Course Materials & Tiers)
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              تحديد باقات الاشتراك المسموح لها بالوصول لكل ملف ومذكرة تعليمية معتمدة
+            </p>
+          </div>
         </div>
 
         <div className="space-y-3">
-          {getStoredProfessors().map((prof) => (
+          {[
+            {
+              id: 'mat-serway-physics',
+              title: 'كتاب فيزياء سيرواي للعلماء والمهندسين 9th Ed',
+              file: 'Serway_Jewett_Physics_9th_Edition_ModernPhysics.pdf',
+              tier: 'free',
+              pages: '1482 صفحة',
+            },
+            {
+              id: 'mat-circuits-theory',
+              title: 'مذكرة نظريات تحليل الدوائر الكهربائية (د. محمد الحبابي)',
+              file: 'Electrical_Circuits_1_Theory_Notes_AlHababi.pdf',
+              tier: 'basic',
+              pages: '248 صفحة',
+            },
+            {
+              id: 'mat-circuits-lab',
+              title: 'دليل التجارب المعملية الرسمي: مختبر الدوائر 2025 (د. محمد الحبابي)',
+              file: 'Electrical_Circuits_Lab_Manual_AlHababi_2025.pdf',
+              tier: 'premium_pro',
+              pages: '160 صفحة',
+            },
+          ].map((mat) => (
             <div
-              key={prof.id}
-              className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+              key={mat.id}
+              className="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-cyan-400 shrink-0">
-                  {prof.avatar.startsWith('/') ? '🎓' : prof.avatar}
-                </div>
-                <div>
-                  <span className="font-bold text-slate-200 block text-sm">{prof.name}</span>
-                  <span className="text-[10px] text-slate-400">{prof.title}</span>
-                </div>
+              <div>
+                <strong className="text-white block">{mat.title}</strong>
+                <span className="font-mono text-[11px] text-cyan-300">{mat.file} • {mat.pages}</span>
               </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] text-slate-400 me-1">المواد:</span>
-                {prof.courses.map((course, cIdx) => (
-                  <span
-                    key={cIdx}
-                    className="font-mono text-[11px] bg-slate-950 text-cyan-300 px-2 py-0.5 rounded border border-slate-800"
-                  >
-                    {course}
-                  </span>
-                ))}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 text-[11px]">باقة الوصول:</span>
+                <select
+                  defaultValue={mat.tier}
+                  onChange={(e) => {
+                    fetch('/api/materials/update-tier', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ materialId: mat.id, accessTier: e.target.value }),
+                    });
+                  }}
+                  className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="free">باقة مجانية (Free)</option>
+                  <option value="basic">باقة أساسية (Basic)</option>
+                  <option value="premium_pro">باقة الميكاترونكس المتقدمة (Pro)</option>
+                </select>
               </div>
             </div>
           ))}
