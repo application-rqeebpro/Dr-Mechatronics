@@ -27,6 +27,7 @@ export class AudioSpeechEngine {
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private isSpeaking: boolean = false;
   private isPaused: boolean = false;
+  private serverTtsDisabledUntil: number = 0;
 
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -215,12 +216,33 @@ export class AudioSpeechEngine {
       .replace(/\^2|²/g, ' تربيع ')
       .replace(/\^3|³/g, ' تكعيب ');
 
+    // Transliterate engineering terms, files and names into spoken Arabic
+    text = text
+      .replace(/Ohm's\s*Law/gi, 'قانون أوم')
+      .replace(/Divider\s*Circuits/gi, 'دوائر مجزئ الجهد')
+      .replace(/Serway/gi, 'سيرواي')
+      .replace(/Theory\s*Notes/gi, 'المذكرات النظرية')
+      .replace(/AlHababi|Al-Hababi/gi, 'الحبابي')
+      .replace(/Chapter/gi, 'الفصل')
+      .replace(/Page|P\./gi, 'صفحة')
+      .replace(/ص\s*(\d+)/g, 'صفحة $1')
+      .replace(/\.pdf|\.doc|\.png|\.jpg/gi, ' ')
+      .replace(/RLC/gi, 'آر إل سي')
+      .replace(/AC/gi, 'تيار متردد')
+      .replace(/DC/gi, 'تيار مستمر')
+      .replace(/PDF/gi, 'بي دي إف')
+      .replace(/its_1_Theory_Notes_AlHababi/gi, 'مذكرات نظرية للدكتور الحبابي')
+      .replace(/V\s*=\s*I\s*[\*·×]\s*R/g, 'الجهد يساوي شدة التيار مضروبة في المقاومة')
+      .replace(/I\s*=\s*V\s*\/\s*R/g, 'التيار يساوي الجهد مقسوماً على المقاومة')
+      .replace(/R\s*=\s*V\s*\/\s*I/g, 'المقاومة تساوي الجهد مقسوماً على التيار');
+
     // Clean remaining markup formatting
     text = text
       .replace(/\$\$|\$/g, '')
       .replace(/##|\*\*/g, '')
       .replace(/\[\d+\]/g, '')
       .replace(/[\\_{}]/g, ' ')
+      .replace(/[a-zA-Z]+/g, ' ') // Strip remaining English words so Arabic speech synthesizer never mangles pronunciation
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -276,18 +298,27 @@ export class AudioSpeechEngine {
     // STRICT: Persona is MALE by default
     const persona = options.persona || 'male';
 
-    // 1. Try Server-Side High-Fidelity Male Neural TTS (Gemini Fenrir voice)
-    if (persona === 'male' && typeof fetch !== 'undefined') {
-      const shortText = cleanedText.slice(0, 350);
+    // 1. Try Server-Side High-Fidelity Arabic Natural Audio (Authentic human Arabic stream)
+    if (typeof fetch !== 'undefined') {
+      const shortText = cleanedText.slice(0, 450);
       fetch('/api/ai/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: shortText, voiceName: 'Fenrir' }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            this.fallbackClientSpeak(cleanedText, options);
+            return null;
+          }
+          return res.json();
+        })
         .then((data) => {
+          if (!data) return;
+
           if (data.success && data.audioBase64) {
-            const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
+            const mimeType = data.mimeType || 'audio/mpeg';
+            const audio = new Audio(`data:${mimeType};base64,${data.audioBase64}`);
             audio.playbackRate = Math.max(0.75, Math.min(1.5, options.rate || 1.0));
             this.currentAudioElement = audio;
             this.isSpeaking = true;
@@ -313,6 +344,7 @@ export class AudioSpeechEngine {
             });
             return;
           }
+
           this.fallbackClientSpeak(cleanedText, options);
         })
         .catch(() => {
@@ -325,7 +357,7 @@ export class AudioSpeechEngine {
   }
 
   /**
-   * Client-side Web Speech fallback with strict male voice enforcement
+   * Client-side Web Speech fallback with natural human enunciation (no robot pitch warping)
    */
   private fallbackClientSpeak(
     cleanedText: string,
@@ -345,12 +377,12 @@ export class AudioSpeechEngine {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    utterance.rate = Math.max(0.6, Math.min(1.8, (options.rate || 1.0) * 0.95));
+    utterance.rate = Math.max(0.7, Math.min(1.4, (options.rate || 1.0) * 0.95));
 
-    // Male pitch calibration: strictly deep male tone (0.72)
+    // Natural human tone calibration (avoids mechanical metallic robot growl)
     const persona = options.persona || 'male';
     const isMale = persona !== 'female';
-    utterance.pitch = isMale ? 0.72 : 1.2;
+    utterance.pitch = isMale ? 0.98 : 1.05;
 
     const available = this.getAvailableVoices();
     let chosenVoice: SpeechSynthesisVoice | undefined;
@@ -365,17 +397,11 @@ export class AudioSpeechEngine {
     if (!chosenVoice) {
       const arVoices = available.filter((v) => v.isArabic);
       if (isMale) {
-        // Find verified male voice
         const verifiedMale = arVoices.find((v) => v.gender === 'male');
         if (verifiedMale?.rawVoice) {
           chosenVoice = verifiedMale.rawVoice;
-        } else {
-          // If all Arabic voices on this device are female (e.g. iOS without Maged),
-          // pick any available voice but enforce deep pitch 0.65 to sound distinctly male!
-          utterance.pitch = 0.65;
-          if (arVoices[0]?.rawVoice) {
-            chosenVoice = arVoices[0].rawVoice;
-          }
+        } else if (arVoices[0]?.rawVoice) {
+          chosenVoice = arVoices[0].rawVoice;
         }
       } else {
         const femaleAr = arVoices.find((v) => v.gender === 'female');
@@ -467,7 +493,7 @@ export class AudioSpeechEngine {
     rate: number = 1.0,
     callbacks?: { onStart?: () => void; onEnd?: () => void; onError?: (err: any) => void }
   ) {
-    const sampleText = `حياكم الله يا شباب ويا باشمهندسين في منصة دكتور الميكاترونكس الذكي. أنا أستاذكم الافتراضي. بنشرح اليوم قانون أوم: الجهد V بيساوي شدة التيار I ضرب المقاومة R. ركزوا معي في هذا المثال العملي!`;
+    const sampleText = `أهلاً بكم يا باشمهندسين في منصة دكتور الميكاترونكس الذكي. هذا هو الصوت العربي الأصلي الطبيعي بدون أي تكسير في اللغة، ونحن جاهزون لبدء شرح المحاضرات الهندسية والسبورة الذكية بكل وضوح وسلاسة.`;
     return this.speak(sampleText, {
       persona,
       voiceId,

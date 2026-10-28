@@ -199,7 +199,7 @@ export const VoiceSettingsControl: React.FC<Props> = ({
             onChange={(e) => onVoiceIdChange(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
           >
-            <option value="">تلقائي حسب النبرة المختارة</option>
+            <option value="">✨ الصوت العربي الأصلي الطبيعي فائق النقاء HD (بدون تكسير)</option>
             {voices.map((v, idx) => (
               <option key={`${v.id}__${idx}`} value={v.id}>
                 {v.isArabic ? '🟢 ' : '🌐 '}

@@ -144,9 +144,9 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
       .replace(/Δ/g, '\\Delta ')
       .replace(/Σ/g, '\\sum ');
 
-    const fileRef = verifiedSourceFile
-      ? `المقرر الرسمي المعتمد (${verifiedSourceFile} صفحة ${verifiedPage || page || '24'})`
-      : 'كتاب Serway المعتمد';
+    const spokenSource = verifiedSourceFile
+      ? `المقرر المعتمد للدكتور الحبابي صفحة ${verifiedPage || page || '24'}`
+      : 'المرجع الهندسي المعتمد';
 
     return [
       {
@@ -154,7 +154,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
         title: 'عنوان وموضوع المحاضرة',
         type: 'title',
         text: lessonTitle,
-        spokenExplanation: `بسم الله الرحمن الرحيم، حياكم الله يا شباب ويا باشمهندسين في جامعاتنا اليمنية والعربية. اليوم بنشرح في هذا الدرس المعتمد من ${fileRef} موضوع: ${lessonTitle}. ركزوا معي خطوة بخطوة عشان نفهم كل القوانين والمسائل التطبيقية.`,
+        spokenExplanation: `بسم الله الرحمن الرحيم، حياكم الله يا شباب ويا باشمهندسين في جامعاتنا اليمنية والعربية. اليوم بنشرح في هذا الدرس المعتمد من ${spokenSource} موضوع: ${lessonTitle.replace(/Ohm's\s*Law.*?Divider\s*Circuits/gi, 'وتحليل دوائر مجزئ الجهد').replace(/\([^)]*\)/g, '')}. ركزوا معي خطوة بخطوة عشان نفهم كل القوانين والمسائل التطبيقية.`,
       },
       {
         id: 2,
