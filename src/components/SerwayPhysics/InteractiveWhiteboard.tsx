@@ -467,21 +467,23 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
       {/* 2. Main Whiteboard Classroom Stage */}
       <div className="rounded-2xl sm:rounded-3xl bg-slate-300/90 p-2 sm:p-4 shadow-2xl border-2 sm:border-4 border-slate-400 w-full max-w-full overflow-hidden min-w-0">
         {/* Whiteboard Chrome Frame Header */}
-        <div className="flex flex-wrap items-center justify-between border-b-2 border-slate-300 pb-2 mb-3 px-1 text-xs text-slate-700 gap-2 w-full min-w-0">
+        <div className="flex items-center justify-between border-b-2 border-slate-300 pb-2 mb-3 px-1.5 text-xs text-slate-700 gap-2 w-full min-w-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
             </div>
-            <span className="font-bold text-slate-800 font-mono text-[11px] ps-1 truncate">
-              {verifiedSourceFile ? `📄 ${verifiedSourceFile} (ص ${verifiedPage || page || '24'})` : 'SMART MECHATRONICS WHITEBOARD'}
-            </span>
+            <div className="min-w-0 flex-1 overflow-hidden" dir="auto">
+              <span className="font-bold text-slate-800 font-mono text-[10px] sm:text-[11px] px-1 truncate block text-start" title={verifiedSourceFile || 'SMART MECHATRONICS WHITEBOARD'}>
+                {verifiedSourceFile ? `📄 ${verifiedSourceFile.length > 26 ? verifiedSourceFile.substring(0, 23) + '...' : verifiedSourceFile} (ص ${verifiedPage || page || '24'})` : 'SMART MECHATRONICS WHITEBOARD'}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-slate-700 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 shrink-0">
             <span>المشهد: {currentStepIndex + 1}/{steps.length}</span>
-            <span className="bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-sans border border-slate-300">
+            <span className="bg-slate-200 text-slate-800 px-1.5 sm:px-2 py-0.5 rounded font-sans border border-slate-300 max-w-[100px] sm:max-w-none truncate">
               {activeStep.title}
             </span>
           </div>

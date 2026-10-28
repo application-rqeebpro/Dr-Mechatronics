@@ -15,19 +15,51 @@ const PORT = 3000;
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Initialize Google GenAI client if API key is present
-const apiKey = process.env.GEMINI_API_KEY;
+// CORS & Preflight Handling for Vercel deployments and custom domains
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Normalize request URL for Vercel Serverless Function rewrites (/api/... or /...)
+app.use((req, res, next) => {
+  if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/@') && !req.url.startsWith('/src') && !req.url.startsWith('/assets')) {
+    const isApiRoute = /^\/(health|ai|voice-settings|materials|universal-lecture)/.test(req.url);
+    if (isApiRoute) {
+      req.url = `/api${req.url}`;
+    }
+  }
+  next();
+});
+
+// Initialize Google GenAI client (supports GEMINI_API_KEY or VITE_GEMINI_API_KEY)
 let aiClient: GoogleGenAI | null = null;
-if (apiKey) {
-  aiClient = new GoogleGenAI({
-    apiKey: apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
+let activeApiKey: string | null = null;
+
+function getAiClient(): GoogleGenAI | null {
+  const currentKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!currentKey || currentKey === 'MY_GEMINI_API_KEY') {
+    return null;
+  }
+  if (!aiClient || activeApiKey !== currentKey) {
+    activeApiKey = currentKey;
+    aiClient = new GoogleGenAI({
+      apiKey: currentKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
       },
-    },
-  });
+    });
+  }
+  return aiClient;
 }
+
 
 // System instructions tailored for Smart Mechatronics Doctor
 const SYSTEM_PROMPT = `
@@ -48,7 +80,8 @@ const SYSTEM_PROMPT = `
 
 // Helper to call Gemini 3.8 Flash or use intelligent domain-specific fallback
 async function callGemini(prompt: string, imageBase64?: { data: string; mimeType: string }) {
-  if (aiClient && process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') {
+  const client = getAiClient();
+  if (client) {
     let timeoutTimer: NodeJS.Timeout | null = null;
     try {
       const parts: any[] = [];
@@ -62,7 +95,7 @@ async function callGemini(prompt: string, imageBase64?: { data: string; mimeType
       }
       parts.push({ text: prompt });
 
-      const apiCall = aiClient.models.generateContent({
+      const apiCall = client.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: { parts },
         config: {
@@ -94,9 +127,10 @@ async function callGemini(prompt: string, imageBase64?: { data: string; mimeType
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    hasApiKey: Boolean(process.env.GEMINI_API_KEY),
+    hasApiKey: Boolean(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY),
     timestamp: new Date().toISOString(),
     service: 'Smart Mechatronics Doctor API',
+    platform: process.env.VERCEL ? 'vercel-serverless' : 'node-express',
   });
 });
 
@@ -1177,7 +1211,11 @@ ${uploadedFile?.extractedText ? `محتوى الملف التعليمي المر
 });
 
 
-// Vite middleware for development
+// Export app for Vercel Serverless Function and standalone environments
+export default app;
+export { app };
+
+// Vite middleware and standalone server
 async function startServer() {
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
@@ -1198,6 +1236,9 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-});
+// Only launch standalone dev server if NOT running inside Vercel serverless
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+  });
+}
