@@ -23,6 +23,7 @@ export class AudioSpeechEngine {
   private static instance: AudioSpeechEngine;
   private voices: SystemVoiceOption[] = [];
   private listeners: (() => void)[] = [];
+  private currentAudioElement: HTMLAudioElement | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private isSpeaking: boolean = false;
   private isPaused: boolean = false;
@@ -265,40 +266,92 @@ export class AudioSpeechEngine {
       onError?: (err: any) => void;
     } = {}
   ): boolean {
+    this.stop();
+
+    const dialect = options.dialect || 'yemeni';
+    const dialectText = dialect === 'yemeni' ? this.applyYemeniDialect(text) : text;
+    const cleanedText = this.cleanTextForSpeech(dialectText);
+    if (!cleanedText) return false;
+
+    // STRICT: Persona is MALE by default
+    const persona = options.persona || 'male';
+
+    // 1. Try Server-Side High-Fidelity Male Neural TTS (Gemini Fenrir voice)
+    if (persona === 'male' && typeof fetch !== 'undefined') {
+      const shortText = cleanedText.slice(0, 350);
+      fetch('/api/ai/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: shortText, voiceName: 'Fenrir' }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.audioBase64) {
+            const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
+            audio.playbackRate = Math.max(0.75, Math.min(1.5, options.rate || 1.0));
+            this.currentAudioElement = audio;
+            this.isSpeaking = true;
+            this.isPaused = false;
+
+            audio.onplay = () => {
+              if (options.onStart) options.onStart();
+            };
+            audio.onended = () => {
+              this.isSpeaking = false;
+              this.isPaused = false;
+              this.currentAudioElement = null;
+              if (options.onEnd) options.onEnd();
+            };
+            audio.onerror = () => {
+              this.isSpeaking = false;
+              this.currentAudioElement = null;
+              this.fallbackClientSpeak(cleanedText, options);
+            };
+
+            audio.play().catch(() => {
+              this.fallbackClientSpeak(cleanedText, options);
+            });
+            return;
+          }
+          this.fallbackClientSpeak(cleanedText, options);
+        })
+        .catch(() => {
+          this.fallbackClientSpeak(cleanedText, options);
+        });
+      return true;
+    }
+
+    return this.fallbackClientSpeak(cleanedText, options);
+  }
+
+  /**
+   * Client-side Web Speech fallback with strict male voice enforcement
+   */
+  private fallbackClientSpeak(
+    cleanedText: string,
+    options: {
+      persona?: VoicePersona;
+      voiceId?: string;
+      rate?: number;
+      pitch?: number;
+      onStart?: () => void;
+      onEnd?: () => void;
+      onError?: (err: any) => void;
+    }
+  ): boolean {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       if (options.onError) options.onError(new Error('SpeechSynthesis not supported'));
       return false;
     }
 
-    this.stop();
-
-    // Default dialect is Yemeni university style
-    const dialect = options.dialect || 'yemeni';
-    const dialectText = dialect === 'yemeni' ? this.applyYemeniDialect(text) : text;
-
-    const cleanedText = this.cleanTextForSpeech(dialectText);
-    if (!cleanedText) return false;
-
     const utterance = new SpeechSynthesisUtterance(cleanedText);
+    utterance.rate = Math.max(0.6, Math.min(1.8, (options.rate || 1.0) * 0.95));
 
-    // Rate
-    utterance.rate = Math.max(0.5, Math.min(2.0, options.rate || 1.0));
-
-    // Pitch & Persona: STRICT DEFAULT MALE
+    // Male pitch calibration: strictly deep male tone (0.72)
     const persona = options.persona || 'male';
-    let basePitch = options.pitch !== undefined ? options.pitch : 0.82;
+    const isMale = persona !== 'female';
+    utterance.pitch = isMale ? 0.72 : 1.2;
 
-    // Actual pitch alteration between Male and Female
-    if (persona === 'male') {
-      basePitch = 0.82; // Deep authoritative academic male resonance
-    } else if (persona === 'female') {
-      basePitch = 1.25; // Bright clear feminine pitch
-    } else {
-      basePitch = 0.82; // Device default still calibrated for male professor
-    }
-    utterance.pitch = Math.max(0.5, Math.min(2.0, basePitch));
-
-    // Voice selection
     const available = this.getAvailableVoices();
     let chosenVoice: SpeechSynthesisVoice | undefined;
 
@@ -310,17 +363,23 @@ export class AudioSpeechEngine {
     }
 
     if (!chosenVoice) {
-      // Find voice matching requested persona
       const arVoices = available.filter((v) => v.isArabic);
-      if (arVoices.length > 0) {
-        if (persona === 'female') {
-          const femaleAr = arVoices.find((v) => v.gender === 'female');
-          chosenVoice = femaleAr?.rawVoice || arVoices[0].rawVoice;
+      if (isMale) {
+        // Find verified male voice
+        const verifiedMale = arVoices.find((v) => v.gender === 'male');
+        if (verifiedMale?.rawVoice) {
+          chosenVoice = verifiedMale.rawVoice;
         } else {
-          // Default: Male Arabic voice prioritized
-          const maleAr = arVoices.find((v) => v.gender === 'male');
-          chosenVoice = maleAr?.rawVoice || arVoices[0].rawVoice;
+          // If all Arabic voices on this device are female (e.g. iOS without Maged),
+          // pick any available voice but enforce deep pitch 0.65 to sound distinctly male!
+          utterance.pitch = 0.65;
+          if (arVoices[0]?.rawVoice) {
+            chosenVoice = arVoices[0].rawVoice;
+          }
         }
+      } else {
+        const femaleAr = arVoices.find((v) => v.gender === 'female');
+        chosenVoice = femaleAr?.rawVoice || arVoices[0]?.rawVoice;
       }
     }
 
@@ -357,6 +416,10 @@ export class AudioSpeechEngine {
   }
 
   public pause() {
+    if (this.currentAudioElement && !this.currentAudioElement.paused) {
+      this.currentAudioElement.pause();
+      this.isPaused = true;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window && this.isSpeaking) {
       window.speechSynthesis.pause();
       this.isPaused = true;
@@ -364,6 +427,10 @@ export class AudioSpeechEngine {
   }
 
   public resume() {
+    if (this.currentAudioElement && this.currentAudioElement.paused) {
+      this.currentAudioElement.play();
+      this.isPaused = false;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window && this.isPaused) {
       window.speechSynthesis.resume();
       this.isPaused = false;
@@ -371,12 +438,17 @@ export class AudioSpeechEngine {
   }
 
   public stop() {
+    if (this.currentAudioElement) {
+      this.currentAudioElement.pause();
+      this.currentAudioElement.currentTime = 0;
+      this.currentAudioElement = null;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      this.isSpeaking = false;
-      this.isPaused = false;
-      this.currentUtterance = null;
     }
+    this.isSpeaking = false;
+    this.isPaused = false;
+    this.currentUtterance = null;
   }
 
   public getStatus() {

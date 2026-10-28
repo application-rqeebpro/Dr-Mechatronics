@@ -378,9 +378,11 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
       {/* 1. Classroom Top Navigation & Subject Bar */}
       <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
-            <BookOpen className="w-5 h-5" />
-          </div>
+          <img
+            src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
+            alt="Professor"
+            className="w-10 h-10 rounded-xl object-cover border border-cyan-400/50 shadow-md shrink-0"
+          />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-bold text-white text-sm sm:text-base">{lessonTitle}</h2>

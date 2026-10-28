@@ -143,8 +143,12 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-xs text-slate-400">
             {/* Brand column */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Bot className="w-5 h-5 text-cyan-400" />
+              <div className="flex items-center gap-2.5 text-white font-bold text-sm">
+                <img
+                  src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
+                  alt="Doctor Mechatronics"
+                  className="w-7 h-7 rounded-full object-cover border border-cyan-400 shadow-sm"
+                />
                 دكتور الميكاترونكس الذكي
               </div>
               <p className="leading-relaxed text-slate-400">

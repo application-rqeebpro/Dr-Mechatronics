@@ -13,7 +13,8 @@ import {
   Search,
   Zap,
   Waves,
-  Bot,
+  Smartphone,
+  Download,
   Layers,
   Cpu,
   CheckCircle2,
@@ -135,8 +136,12 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
           {/* Text & Search Column */}
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
-              <Bot className="w-4 h-4 animate-bounce" />
-              <span>المنصة الأكاديمية الأولى في هندسة الميكاترونكس والأنظمة الذكية</span>
+              <img
+                src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
+                alt="Teacher Icon"
+                className="w-5 h-5 rounded-full object-cover border border-cyan-400"
+              />
+              <span>الأستاذ الأكاديمي الافتراضي • بصوت ذكوري ونظام سبورة تفاعلي</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
@@ -147,8 +152,28 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-              منصة تعليمية وهندسية متكاملة تجمع بين الأساتذة الافتراضيين، والسبورة التفاعلية، ومختبرات المحاكاة الحية لدوائر التيار المتردد والروبوتات والتحكم، مع حاسبات دقيقة وأدوات ذكاء اصطناعي أكاديمية حقيقية.
+              منصة هندسية تعليمية تجمع بين الأستاذ الافتراضي، والسبورة التفاعلية الحية، ومحاكاة دوائر التيار المتردد والروبوتات، وشرح كتاب Serway للفيزياء الهندسية.
             </p>
+
+            {/* Quick Actions & PWA Install */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => onNavigate('serway-physics')}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>شرح كتاب Serway</span>
+              </button>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('trigger-pwa-install'));
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/40 font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-cyan-950/40"
+              >
+                <Smartphone className="w-4 h-4 text-cyan-400" />
+                <span>📲 تثبيت التطبيق على الجوال</span>
+              </button>
+            </div>
 
             {/* Quick Search input */}
             <form onSubmit={handleSearchSubmit} className="max-w-xl flex gap-2">
@@ -164,38 +189,50 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
               </div>
               <button
                 type="submit"
-                className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg shadow-cyan-600/30 shrink-0"
+                className="px-5 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg shadow-cyan-600/30 shrink-0"
               >
                 بحث
               </button>
             </form>
 
             {/* Feature Pills */}
-            <div className="flex flex-wrap gap-2 pt-2 text-xs text-slate-400">
+            <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+              <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
+                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                صوت ذكوري وقلم تفاعلي
+              </span>
               <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
                 <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
                 دوائر AC والرنين RLC
               </span>
               <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
                 <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-                حركيات الأذرع الروبوتية
-              </span>
-              <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-                تحكم PID والاستجابة الزمنية
+                تثبيت PWA على الهواتف
               </span>
             </div>
           </div>
 
-          {/* Featured Whiteboard Showcase: Dr. Faraday (matching user's uploaded image!) */}
+          {/* Featured Whiteboard Showcase: Dr. Al-Hababi + Teacher Badge */}
           <div className="lg:col-span-5">
             <div className="bg-slate-950 rounded-2xl border-2 border-cyan-500/40 p-4 shadow-2xl relative overflow-hidden group">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
-                <span className="font-bold text-cyan-300 flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                  محاضرة الأستاذ الافتراضي المباشرة
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
+                    alt="Teacher"
+                    className="w-8 h-8 rounded-full object-cover border border-cyan-400"
+                  />
+                  <div>
+                    <span className="font-bold text-cyan-300 block">الأستاذ الافتراضي</span>
+                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                      صوت ذكر + سبورة حية
+                    </span>
+                  </div>
+                </div>
+                <span className="font-mono text-cyan-400 text-xs font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800/80">
+                  د. محمد الحبابي
                 </span>
-                <span className="font-mono text-cyan-400 text-xs font-bold">د. محمد الحبابي</span>
               </div>
 
               {/* Whiteboard Photo */}
@@ -207,7 +244,7 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90" />
                 <div className="absolute bottom-3 start-3 end-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-500/30 font-mono font-bold">
+                  <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-500/30 font-mono font-bold text-[11px]">
                     Serway Physics & Circuits
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -222,7 +259,7 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
                       onClick={() => onNavigate('professors')}
                       className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg font-bold transition-all border border-slate-700 text-[11px]"
                     >
-                      مواد الدكتور
+                      السبورة
                       <ArrowLeft className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -230,7 +267,7 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
               </div>
 
               <div className="mt-3 text-xs text-slate-300 leading-relaxed font-sans">
-                شرح كتاب Serway (Physics 9th Ed) ومواد الدوائر الكهربائية لـ د. محمد الحبابي وفق الأسلوب الأكاديمي المعتمد.
+                شرح كتاب Serway ومواد الدوائر الكهربائية لـ د. محمد الحبابي مع تتبع القلم الصوتي تدريجيًا.
               </div>
             </div>
           </div>

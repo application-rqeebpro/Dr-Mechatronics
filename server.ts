@@ -566,6 +566,69 @@ app.post('/api/voice-settings', (req, res) => {
   });
 });
 
+// API: High-fidelity Arabic Male Text-to-Speech (Fenrir / Charon Voice)
+app.post('/api/ai/tts', async (req, res) => {
+  try {
+    const { text, voiceName = 'Fenrir' } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    // Limit text chunk for responsive TTS audio streaming
+    const cleanChunk = text.slice(0, 500);
+
+    if (aiClient && process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY') {
+      try {
+        const response = await aiClient.models.generateContent({
+          model: 'gemini-3.8-flash-lite-tts',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: cleanChunk,
+                  speechMetadata: {
+                    style: 'Authoritative, calm, academic male engineering professor speaking Arabic',
+                  },
+                },
+              ],
+            },
+          ],
+          config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: voiceName }, // 'Fenrir' (Deep Male) or 'Charon' (Male)
+              },
+            },
+          },
+        });
+
+        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        if (base64Audio) {
+          return res.json({
+            success: true,
+            audioBase64: base64Audio,
+            mimeType: 'audio/wav',
+            voice: voiceName,
+            isMale: true,
+          });
+        }
+      } catch (err: any) {
+        console.warn('Gemini TTS fallback:', err?.message);
+      }
+    }
+
+    res.json({
+      success: false,
+      message: 'Server TTS fallback to calibrated device male engine',
+      isMale: true,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message, isMale: true });
+  }
+});
+
 // API: Get approved course materials
 app.get('/api/materials', (req, res) => {
   res.json({
