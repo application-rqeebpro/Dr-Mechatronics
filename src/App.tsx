@@ -96,7 +96,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white">
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
@@ -109,7 +109,7 @@ export default function App() {
       />
 
       {/* Main Body Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-x-hidden min-w-0">
         {activeTab === 'home' && <HomeHero onNavigate={setActiveTab} lang={lang} />}
         {activeTab === 'serway-physics' && <SerwayPhysicsHub />}
         {activeTab === 'professors' && (
@@ -138,8 +138,8 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 bg-slate-950 border-t border-slate-900 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <footer className="mt-16 w-full max-w-full overflow-x-hidden bg-slate-950 border-t border-slate-900 py-10">
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-xs text-slate-400">
             {/* Brand column */}
             <div className="space-y-3">

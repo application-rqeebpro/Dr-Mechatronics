@@ -152,26 +152,26 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
     : 'السبورة التفاعلية الذكية';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header & Configuration Bar */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
+      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md relative overflow-hidden w-full max-w-full">
         <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-800">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-1">
-              <GraduationCap className="w-4 h-4" />
+              <GraduationCap className="w-4 h-4 shrink-0" />
               <span>الأستاذ الافتراضي والسبورة التفاعلية</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-100">
               شرح تفاعلي مباشر مع أي دكتور وجامعة
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
               أدخل اسم دكتورك ومادتك وعنوان الدرس؛ وسيتم إنشاء الشرح التفاعلي وكتابته على السبورة فورًا.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => setShowVoiceSettings(!showVoiceSettings)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
@@ -180,7 +180,7 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                   : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
               }`}
             >
-              <Sliders className="w-4 h-4 text-cyan-400" />
+              <Sliders className="w-4 h-4 text-cyan-400 shrink-0" />
               <span>إعدادات الصوت والنبرة</span>
             </button>
 
@@ -190,7 +190,7 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-colors"
               >
                 <span>استوديو رفع الملفات</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </button>
             )}
           </div>
@@ -210,67 +210,67 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
           </div>
         )}
 
-        {/* Inputs: Empty by default */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-300">اسم الدكتور (فارغ):</label>
+        {/* Inputs: Empty by default - dynamic grid that scales cleanly */}
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full min-w-0">
+          <div className="space-y-1 min-w-0">
+            <label className="text-[11px] font-semibold text-slate-300 block">اسم الدكتور (فارغ):</label>
             <input
               type="text"
               value={doctorName}
               onChange={(e) => setDoctorName(e.target.value)}
               placeholder="اكتب اسم أي دكتور تريده..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+              className="w-full min-w-0 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-300">التخصص:</label>
+          <div className="space-y-1 min-w-0">
+            <label className="text-[11px] font-semibold text-slate-300 block">التخصص:</label>
             <input
               type="text"
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
               placeholder="مثال: هندسة ميكاترونكس، كهرباء..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+              className="w-full min-w-0 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-300">الجامعة (اختياري):</label>
+          <div className="space-y-1 min-w-0">
+            <label className="text-[11px] font-semibold text-slate-300 block">الجامعة (اختياري):</label>
             <input
               type="text"
               value={university}
               onChange={(e) => setUniversity(e.target.value)}
               placeholder="اسم الجامعة أو الكلية..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+              className="w-full min-w-0 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-300">اسم المادة:</label>
+          <div className="space-y-1 min-w-0">
+            <label className="text-[11px] font-semibold text-slate-300 block">اسم المادة:</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="اكتب اسم المادة..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+              className="w-full min-w-0 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-300">عنوان الدرس:</label>
+          <div className="space-y-1 min-w-0">
+            <label className="text-[11px] font-semibold text-slate-300 block">عنوان الدرس:</label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="عنوان الموضوع أو المسألة..."
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
+              className="w-full min-w-0 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
             />
           </div>
         </div>
 
         {/* Generate / Update Button */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800">
-          <div className="text-xs text-slate-400">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800 w-full">
+          <div className="text-xs text-slate-400 truncate max-w-full">
             {doctorName.trim()
               ? `الاسم المعتمد للشرح: د. ${doctorName.trim()}`
               : 'شرح الأستاذ الافتراضي الذكي'}
@@ -279,29 +279,29 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
           <button
             disabled={isGenerating}
             onClick={handleGenerateLecture}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/20 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-600/20 transition-all shrink-0"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 shrink-0" />
             <span>{isGenerating ? 'جاري بناء الشرح...' : 'تحديث وتوليد الشرح على السبورة'}</span>
           </button>
         </div>
       </div>
 
       {/* The Whiteboard Frame */}
-      <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+      <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-3.5 sm:p-6 shadow-2xl relative overflow-hidden w-full max-w-full">
         {/* Controls Header */}
-        <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 text-xs gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
-            <h3 className="font-bold text-white text-sm truncate max-w-md">
+        <div className="flex flex-wrap items-center justify-between pb-3 sm:pb-4 border-b border-slate-800 text-xs gap-3 w-full">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+            <h3 className="font-bold text-white text-xs sm:text-sm truncate">
               {displayTitle}
             </h3>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleTogglePlaySpeech}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all min-h-[38px] ${
                 isSpeaking
                   ? isPaused
                     ? 'bg-amber-600 text-white'
@@ -309,14 +309,14 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                   : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md'
               }`}
             >
-              {isSpeaking ? (isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />) : <Volume2 className="w-3.5 h-3.5" />}
+              {isSpeaking ? (isPaused ? <Play className="w-3.5 h-3.5 fill-current shrink-0" /> : <Pause className="w-3.5 h-3.5 shrink-0" />) : <Volume2 className="w-3.5 h-3.5 shrink-0" />}
               <span>{isSpeaking ? (isPaused ? 'استئناف' : 'إيقاف مؤقت') : 'استمع إلى الشرح'}</span>
             </button>
 
             {isSpeaking && (
               <button
                 onClick={handleStopSpeech}
-                className="p-1.5 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors"
+                className="p-2 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors shrink-0"
                 title="إيقاف تام"
               >
                 <Square className="w-3.5 h-3.5" />
@@ -325,59 +325,59 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
           </div>
         </div>
 
-        {/* Whiteboard Workspace */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 my-5">
+        {/* Whiteboard Workspace - Dynamic Grid & Responsive Flexbox */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 my-4 sm:my-5 w-full min-w-0">
           {/* Virtual Doctor Avatar Card */}
-          <div className="lg:col-span-3 flex flex-col items-center justify-start text-center border-b lg:border-b-0 lg:border-l border-slate-800/80 pb-4 lg:pb-0 lg:pl-4">
-            <div className="relative group">
+          <div className="lg:col-span-3 flex flex-col items-center justify-start text-center border-b lg:border-b-0 lg:border-l border-slate-800/80 pb-5 lg:pb-0 lg:pl-5 min-w-0 w-full">
+            <div className="relative group shrink-0">
               <img
-                src="/assets/aistudio/855835000_1444226130442451_3607535876634852799_n__1__65712c61.webp"
+                src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
                 alt="Doctor Avatar"
-                className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl object-cover border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10"
+                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-2 border-cyan-500/40 shadow-xl shadow-cyan-500/10"
               />
-              <div className="absolute -bottom-2 -right-2 p-1.5 rounded-full bg-cyan-600 text-white shadow">
+              <div className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-cyan-600 text-white shadow">
                 <GraduationCap className="w-4 h-4" />
               </div>
             </div>
 
-            <h4 className="font-bold text-sm text-white mt-3">
+            <h4 className="font-bold text-sm sm:text-base text-white mt-3 truncate max-w-full">
               {doctorName.trim() ? `د. ${doctorName.trim()}` : 'الأستاذ الافتراضي'}
             </h4>
             <span className="text-[10px] text-slate-400 block font-mono">
               (شخصية أكاديمية افتراضية)
             </span>
 
-            <p className="text-[11px] text-cyan-400 font-semibold mt-1">
+            <p className="text-[11px] text-cyan-400 font-semibold mt-1 truncate max-w-full">
               {specialty.trim() || subject.trim() || 'الهندسة والميكاترونكس'}
             </p>
             {university.trim() && (
-              <p className="text-[10px] text-slate-400 mt-0.5">{university.trim()}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-full">{university.trim()}</p>
             )}
 
             <div className="mt-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 text-start leading-relaxed w-full">
               <div className="flex items-center gap-1 text-slate-300 font-bold mb-0.5">
-                <Info className="w-3 h-3 text-cyan-400" />
+                <Info className="w-3 h-3 text-cyan-400 shrink-0" />
                 <span>توضيح أكاديمي:</span>
               </div>
-              هذه الشخصية تمثيل افتراضي ذكي لشرح المحاضرة، وليست الدكتور الحقيقي، ولا تنسب إليه أقوالًا أو تسجيلات فعلية.
+              هذه الشخصية تمثيل افتراضي ذكي لشرح المحاضرة، وليست الدكتور الحقيقي، وتعتمد أسلوب الإلقاء والشرح الأكاديمي.
             </div>
 
             {currentScene?.professorSpeech && (
               <div className="mt-3 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-xs text-cyan-200 text-start leading-relaxed shadow w-full">
                 <div className="text-[10px] font-bold text-cyan-400 mb-1 flex items-center justify-between">
                   <span>شرح الأستاذ:</span>
-                  <Volume2 className="w-3 h-3 text-cyan-400" />
+                  <Volume2 className="w-3 h-3 text-cyan-400 shrink-0" />
                 </div>
                 <p className="italic">"{currentScene.professorSpeech}"</p>
               </div>
             )}
           </div>
 
-          {/* Whiteboard Math & Content */}
-          <div className="lg:col-span-9 space-y-4">
-            <div className="bg-slate-950 p-6 rounded-2xl border-2 border-slate-800 shadow-inner min-h-[300px]">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 text-xs mb-4">
-                <span className="font-bold text-cyan-400">
+          {/* Whiteboard Math & Content Surface */}
+          <div className="lg:col-span-9 space-y-4 min-w-0 w-full">
+            <div className="bg-slate-950 p-3.5 sm:p-6 rounded-2xl border-2 border-slate-800 shadow-inner min-h-[300px] w-full min-w-0 overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-800/80 text-xs mb-4 gap-2">
+                <span className="font-bold text-cyan-400 text-xs sm:text-sm truncate max-w-[280px] sm:max-w-md">
                   المشهد {currentSceneIndex + 1} من {scenes.length}: {currentScene.title}
                 </span>
                 <span className="text-[11px] text-slate-500 font-mono">
@@ -385,14 +385,14 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                 </span>
               </div>
 
-              <div className="space-y-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-100">
+              <div className="space-y-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-100 break-words whiteboard-text select-text">
                 {(currentScene.whiteboardText || '').split('\n\n').map((paragraph, pIdx) => {
                   const trimmed = paragraph.trim();
                   if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
                     const cleanFormula = trimmed.slice(2, -2).trim();
                     return (
-                      <div key={pIdx} className="my-3 p-3 bg-slate-900 rounded-xl border border-cyan-500/30 text-center overflow-x-auto">
-                        <MathView math={cleanFormula} block={true} className="text-cyan-300 text-base sm:text-lg" />
+                      <div key={pIdx} className="my-3 p-2.5 sm:p-3 bg-slate-900 rounded-xl border border-cyan-500/30 text-center overflow-x-auto max-w-full">
+                        <MathView math={cleanFormula} block={true} className="text-cyan-300 text-sm sm:text-base md:text-lg max-w-full" />
                       </div>
                     );
                   }
@@ -405,7 +405,7 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
               </div>
 
               {currentScene.diagramType && (
-                <div className="mt-5 p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <div className="mt-5 p-3 rounded-xl bg-slate-900 border border-slate-800 overflow-x-auto max-w-full">
                   <WhiteboardDiagram
                     type={
                       currentScene.diagramType === 'circuit'
@@ -419,21 +419,21 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
               )}
             </div>
 
-            {/* Stepped Controls */}
-            <div className="flex items-center justify-between pt-2 text-xs">
+            {/* Stepped Controls with dynamic wrap & touch-friendly sizing */}
+            <div className="flex items-center justify-between pt-2 text-xs gap-2 w-full">
               <button
                 disabled={currentSceneIndex === 0}
                 onClick={() => {
                   handleStopSpeech();
                   setCurrentSceneIndex((p) => Math.max(0, p - 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors shrink-0 min-h-[38px] text-xs sm:text-sm"
               >
-                <ArrowRight className="w-4 h-4" />
-                المشهد السابق
+                <ArrowRight className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">المشهد</span> السابق
               </button>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-1 max-w-[160px] sm:max-w-none">
                 {scenes.map((_, idx) => (
                   <button
                     key={idx}
@@ -441,9 +441,9 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                       handleStopSpeech();
                       setCurrentSceneIndex(idx);
                     }}
-                    className={`h-2.5 rounded-full transition-all ${
+                    className={`h-2.5 rounded-full transition-all shrink-0 ${
                       currentSceneIndex === idx
-                        ? 'w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50'
+                        ? 'w-6 sm:w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50'
                         : 'w-2.5 bg-slate-800 hover:bg-slate-700'
                     }`}
                   />
@@ -456,10 +456,10 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
                   handleStopSpeech();
                   setCurrentSceneIndex((p) => Math.min(scenes.length - 1, p + 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-200 border border-slate-800 transition-colors shrink-0 min-h-[38px] text-xs sm:text-sm"
               >
-                المشهد التالي
-                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">المشهد</span> التالي
+                <ArrowLeft className="w-4 h-4 shrink-0" />
               </button>
             </div>
           </div>

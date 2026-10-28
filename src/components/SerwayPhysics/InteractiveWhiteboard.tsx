@@ -374,46 +374,46 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-full overflow-x-hidden min-w-0">
       {/* 1. Classroom Top Navigation & Subject Bar */}
-      <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-wrap items-center justify-between gap-3 w-full min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <img
             src="/assets/aistudio/file_00000000d6648210a5de34ab1bae4073_9f4c464e.png"
             alt="Professor"
             className="w-10 h-10 rounded-xl object-cover border border-cyan-400/50 shadow-md shrink-0"
           />
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-bold text-white text-sm sm:text-base">{lessonTitle}</h2>
+              <h2 className="font-bold text-white text-xs sm:text-base truncate">{lessonTitle}</h2>
               {verifiedSourceFile ? (
-                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1">
+                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 shrink-0">
                   <FileCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span className="truncate max-w-[200px] sm:max-w-xs">{verifiedSourceFile}</span>
+                  <span className="truncate max-w-[150px] sm:max-w-xs">{verifiedSourceFile}</span>
                   <span>• ص {verifiedPage || page || '24'}</span>
                 </span>
               ) : (
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 shrink-0">
                   {chapter || 'Serway 9th Ed'}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+            <p className="text-[11px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="text-cyan-300 font-medium">قاعة المحاضرات الذكية</span>
               <span className="text-slate-600">•</span>
               <span>أستاذ أنمي ذكوري بلهجة يمنية جامعية</span>
-              <span className="text-slate-600">•</span>
-              <span className="text-emerald-400 font-mono text-[10px]">كتابة تفاعلية على السبورة</span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="text-emerald-400 font-mono text-[10px] hidden sm:inline">كتابة تفاعلية على السبورة</span>
             </p>
           </div>
         </div>
 
         {/* Action Controls in Header Bar */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* Layout Toggle (Side-by-Side vs Full Board) */}
           <button
             onClick={() => setLayoutMode((prev) => (prev === 'side_by_side' ? 'full_board' : 'side_by_side'))}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all min-h-[36px]"
             title="تبديل وضع العرض"
           >
             {layoutMode === 'side_by_side' ? <Maximize2 className="w-3.5 h-3.5 text-cyan-400" /> : <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />}
@@ -425,7 +425,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
           {/* Voice Settings Modal Toggle */}
           <button
             onClick={() => setShowVoiceSettings((prev) => !prev)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[36px] ${
               showVoiceSettings
                 ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30'
                 : 'bg-slate-950 border border-slate-800 text-cyan-400 hover:border-cyan-500/50'
@@ -439,7 +439,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
           <button
             onClick={handleToggleVoice}
             title={voiceEnabled ? 'كتم الصوت' : 'تفعيل صوت الأستاذ'}
-            className={`p-2 rounded-xl border transition-all ${
+            className={`p-2 rounded-xl border transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
               voiceEnabled
                 ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400'
                 : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300'
@@ -452,7 +452,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
 
       {/* Voice Settings Popover Drawer if Open */}
       {showVoiceSettings && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in w-full min-w-0">
           <VoiceSettingsControl
             persona={voicePersona}
             selectedVoiceId={selectedVoiceId}
@@ -465,10 +465,10 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
       )}
 
       {/* 2. Main Whiteboard Classroom Stage */}
-      <div className="rounded-3xl bg-slate-300/90 p-2 sm:p-4 shadow-2xl border-4 border-slate-400">
+      <div className="rounded-2xl sm:rounded-3xl bg-slate-300/90 p-2 sm:p-4 shadow-2xl border-2 sm:border-4 border-slate-400 w-full max-w-full overflow-hidden min-w-0">
         {/* Whiteboard Chrome Frame Header */}
-        <div className="flex flex-wrap items-center justify-between border-b-2 border-slate-300 pb-2 mb-3 px-1 text-xs text-slate-700">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex flex-wrap items-center justify-between border-b-2 border-slate-300 pb-2 mb-3 px-1 text-xs text-slate-700 gap-2 w-full min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
@@ -488,10 +488,10 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
         </div>
 
         {/* The Classroom Body: Split between Animated Anime Professor & Whiteboard Surface */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch w-full min-w-0">
           {/* Anime Professor Column (Visible when side-by-side or stacked on mobile) */}
           {layoutMode === 'side_by_side' && (
-            <div className="lg:col-span-4 flex flex-col">
+            <div className="lg:col-span-4 flex flex-col w-full min-w-0">
               <AnimeProfessorBoard
                 isSpeaking={isSpeakingAudio}
                 isWriting={isPenWriting}
@@ -506,7 +506,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
 
           {/* Whiteboard Writing Surface */}
           <div
-            className={`relative rounded-2xl bg-white p-4 sm:p-6 shadow-inner text-slate-900 select-text overflow-hidden flex flex-col justify-between ${
+            className={`relative rounded-2xl bg-white p-3 sm:p-6 shadow-inner text-slate-900 select-text overflow-hidden flex flex-col justify-between w-full min-w-0 ${
               layoutMode === 'side_by_side' ? 'lg:col-span-8' : 'lg:col-span-12'
             }`}
             style={{
