@@ -11,10 +11,14 @@ export interface SystemVoiceOption {
 }
 
 export type VoicePersona = 'male' | 'female' | 'device_default';
+export type ArabicDialect = 'yemeni' | 'standard' | 'egyptian' | 'gulf' | 'levantine';
+export type VoiceEngineType = 'native_hd' | 'fenrir_male' | 'neural_female' | 'device_tts';
 
 export interface VoiceEngineSettings {
   persona: VoicePersona;
   selectedVoiceId: string;
+  dialect: ArabicDialect;
+  engine: VoiceEngineType;
   rate: number;
   pitch: number;
 }
@@ -28,6 +32,8 @@ export class AudioSpeechEngine {
   private isSpeaking: boolean = false;
   private isPaused: boolean = false;
   private serverTtsDisabledUntil: number = 0;
+  private activeRequestId: number = 0;
+  private activeAbortController: AbortController | null = null;
 
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -250,26 +256,73 @@ export class AudioSpeechEngine {
   }
 
   /**
-   * Applies authentic Yemeni academic university phrasing and pedagogical tone
+   * Applies selected Arabic educational dialect phrasing and pedagogical tone
    */
-  public applyYemeniDialect(rawText: string): string {
+  public applyDialect(rawText: string, dialect: ArabicDialect = 'yemeni'): string {
     if (!rawText) return '';
     let text = rawText;
 
-    // Transform greetings into friendly Yemeni university lecture tone
-    text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، حياكم الله يا شباب ويا باشمهندسين');
-
-    // Natural Yemeni academic phrases
-    text = text
-      .replace(/دعونا نبدأ بفهم فكرة/g, 'خلونا نبدأ سوا بفهم فكرة')
-      .replace(/نكتب الآن على السبورة القانون/g, 'ركزوا معي تمام يا باشمهندسين، وبنكتب على السبورة القانون')
-      .replace(/لاحظوا معي هذا القانون/g, 'ركزوا معي يا شباب كيف نطبق هذا القانون')
-      .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'انتبهوا يا باشمهندسين عشان ما تغلطوش في معاني الرموز')
-      .replace(/أول سؤال معانا بيكون كالتالي/g, 'يلا نشوف هذا المثال المحلول سوا خطوة بخطوة')
-      .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'انتبهوا يا مهندسين، هذا خطأ شائع يقع فيه أغلب الطلاب في الاختبارات')
-      .replace(/والآن مع سؤال اختبر نفسك/g, 'والآن يا شباب اختبروا معلوماتكم في هذا السؤال السريع');
+    if (dialect === 'yemeni') {
+      text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، حياكم الله يا شباب ويا باشمهندسين');
+      text = text
+        .replace(/دعونا نبدأ بفهم فكرة/g, 'خلونا نبدأ سوا بفهم فكرة')
+        .replace(/نكتب الآن على السبورة القانون/g, 'ركزوا معي تمام يا باشمهندسين، وبنكتب على السبورة القانون')
+        .replace(/لاحظوا معي هذا القانون/g, 'ركزوا معي يا شباب كيف نطبق هذا القانون')
+        .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'انتبهوا يا باشمهندسين عشان ما تغلطوش في معاني الرموز')
+        .replace(/أول سؤال معانا بيكون كالتالي/g, 'يلا نشوف هذا المثال المحلول سوا خطوة بخطوة')
+        .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'انتبهوا يا مهندسين، هذا خطأ شائع يقع فيه أغلب الطلاب في الاختبارات')
+        .replace(/والآن مع سؤال اختبر نفسك/g, 'والآن يا شباب اختبروا معلوماتكم في هذا السؤال السريع');
+    } else if (dialect === 'egyptian') {
+      text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، أهلاً بيكم يا باشمهندسين ومنورين');
+      text = text
+        .replace(/دعونا نبدأ بفهم فكرة/g, 'يلا بينا نبدأ نفهم فكرة الدرس دي كويس أوي')
+        .replace(/نكتب الآن على السبورة القانون/g, 'تعالوا نكتب على السبورة القانون مع بعض خطوة بخطوة')
+        .replace(/لاحظوا معي هذا القانون/g, 'بصوا معايا يا شباب إزاي بنطبق القانون ده')
+        .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'خلوا بالكم يا شباب عشان متقعوش في الغلطة دي في الرموز')
+        .replace(/أول سؤال معانا بيكون كالتالي/g, 'يلا بينا نشوف المثال ده محلول خطوة بخطوة وببساطة')
+        .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'خلي بالكم يا مهندسين، ده خطأ شائع بيقع فيه أغلب الطلبة في الامتحانات')
+        .replace(/والآن مع سؤال اختبر نفسك/g, 'ودلوقتي يا شباب اختبروا نفسكم في السؤال السريع ده');
+    } else if (dialect === 'gulf') {
+      text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، مرحبابكم يا هلا بالمهندسين الكرام');
+      text = text
+        .replace(/دعونا نبدأ بفهم فكرة/g, 'خلونا نبدأ مع بعض نفهم الفكرة الأساسية للدرس')
+        .replace(/نكتب الآن على السبورة القانون/g, 'بنكتب الحين على السبورة القانون الرئيسي خطوة بخطوة')
+        .replace(/لاحظوا معي هذا القانون/g, 'ركزوا وياي يا شباب كيف نطبق هالقانون')
+        .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'انتبهوا زين يا شباب عشان ما تلخبطون في معاني الرموز')
+        .replace(/أول سؤال معانا بيكون كالتالي/g, 'خلونا نشوف هالمثال المحلول خطوة بخطوة')
+        .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'انتبهوا يا مهندسين، هذا خطأ شائع يطيحون فيه أغلب الطلاب في الاختبارات')
+        .replace(/والآن مع سؤال اختبر نفسك/g, 'والحين يا شباب اختبروا معلوماتكم في هذا السؤال السريع');
+    } else if (dialect === 'levantine') {
+      text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، مية أهلاً وسهلاً فيكم يا مهندسين');
+      text = text
+        .replace(/دعونا نبدأ بفهم فكرة/g, 'خلونا نبلش سوا بفهم الفكرة الأساسية للدرس')
+        .replace(/نكتب الآن على السبورة القانون/g, 'رح نكتب هلق على اللوح القانون الأساسي سوا')
+        .replace(/لاحظوا معي هذا القانون/g, 'ركزوا معي كيف فينا نطبق هالقانون')
+        .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'انتبهوا كتير منيح مشان ما تخربطوا بمعاني الرموز')
+        .replace(/أول سؤال معانا بيكون كالتالي/g, 'يلا نشوف هالمثال المحلول خطوة بخطوة وبكل وضوح')
+        .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'انتبهوا يا مهندسين، هاد خطأ شائع بيوقعوا فيه أغلب الطلاب بالفحص')
+        .replace(/والآن مع سؤال اختبر نفسك/g, 'وهلق يا شباب اختبروا معلوماتكم بهالسؤال السريع');
+    } else {
+      // Standard Arabic (الفصحى المعيارية)
+      text = text.replace(/بسم الله الرحمن الرحيم.*?(?:الطلاب|أبنائي)/, 'بسم الله الرحمن الرحيم، أهلاً ومرحباً بكم أعزائي الطلبة والمهندسين');
+      text = text
+        .replace(/دعونا نبدأ بفهم فكرة/g, 'دعونا نبدأ بدراسة المفهوم الأساسي للدرس')
+        .replace(/نكتب الآن على السبورة القانون/g, 'نكتب الآن على السبورة القانون الحاكم خطوة بخطوة')
+        .replace(/لاحظوا معي هذا القانون/g, 'لاحظوا معي كيفية تطبيق هذا القانون بدقة')
+        .replace(/انتبهوا جيدًا لمعاني الرموز/g, 'انتبهوا جيداً لشروط تطبيق هذه المعادلة ومعاني الرموز')
+        .replace(/أول سؤال معانا بيكون كالتالي/g, 'لنستعرض معاً هذا المثال المحلول خطوة بخطوة')
+        .replace(/تنبيه مهم جدًا في هذه النقطة/g, 'تنبيه أكاديمي مهم: هذا خطأ شائع يقع فيه أغلب الطلاب في الاختبارات')
+        .replace(/والآن مع سؤال اختبر نفسك/g, 'والآن اختبروا معلوماتكم في هذا التمرين السريع');
+    }
 
     return text;
+  }
+
+  /**
+   * Backward-compatible alias for Yemeni dialect
+   */
+  public applyYemeniDialect(rawText: string): string {
+    return this.applyDialect(rawText, 'yemeni');
   }
 
   /**
@@ -279,7 +332,8 @@ export class AudioSpeechEngine {
     text: string,
     options: {
       persona?: VoicePersona;
-      dialect?: 'yemeni' | 'standard';
+      dialect?: ArabicDialect;
+      engine?: VoiceEngineType;
       voiceId?: string;
       rate?: number;
       pitch?: number;
@@ -291,32 +345,54 @@ export class AudioSpeechEngine {
     this.stop();
 
     const dialect = options.dialect || 'yemeni';
-    const dialectText = dialect === 'yemeni' ? this.applyYemeniDialect(text) : text;
+    const dialectText = this.applyDialect(text, dialect);
     const cleanedText = this.cleanTextForSpeech(dialectText);
     if (!cleanedText) return false;
 
-    // STRICT: Persona is MALE by default
-    const persona = options.persona || 'male';
+    // If student explicitly requested local device synthesizer:
+    if (options.engine === 'device_tts') {
+      return this.fallbackClientSpeak(cleanedText, options);
+    }
 
-    // 1. Try Server-Side High-Fidelity Arabic Natural Audio (Authentic human Arabic stream)
+    // STRICT USER REQUIREMENT: Male voice only, prevent robot voice completely
+    const reqId = ++this.activeRequestId;
+    const controller = new AbortController();
+    this.activeAbortController = controller;
+
     if (typeof fetch !== 'undefined') {
       const shortText = cleanedText.slice(0, 450);
       fetch('/api/ai/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: shortText, voiceName: 'Fenrir' }),
+        signal: controller.signal,
+        body: JSON.stringify({
+          text: shortText,
+          voiceName: 'Fenrir',
+          dialect,
+          engine: options.engine || 'native_hd',
+        }),
       })
         .then((res) => {
+          if (reqId !== this.activeRequestId) return null;
           if (!res.ok) {
-            this.fallbackClientSpeak(cleanedText, options);
+            if (options.onError) options.onError(new Error('Audio network response failed'));
             return null;
           }
           return res.json();
         })
         .then((data) => {
-          if (!data) return;
+          if (!data || reqId !== this.activeRequestId) return;
 
           if (data.success && data.audioBase64) {
+            // Stop any playing audio before starting new playback
+            if (this.currentAudioElement) {
+              try {
+                this.currentAudioElement.pause();
+                this.currentAudioElement.currentTime = 0;
+              } catch {}
+              this.currentAudioElement = null;
+            }
+
             const mimeType = data.mimeType || 'audio/mpeg';
             const audio = new Audio(`data:${mimeType};base64,${data.audioBase64}`);
             audio.playbackRate = Math.max(0.75, Math.min(1.5, options.rate || 1.0));
@@ -325,35 +401,56 @@ export class AudioSpeechEngine {
             this.isPaused = false;
 
             audio.onplay = () => {
+              if (reqId !== this.activeRequestId) {
+                audio.pause();
+                return;
+              }
               if (options.onStart) options.onStart();
             };
             audio.onended = () => {
-              this.isSpeaking = false;
-              this.isPaused = false;
-              this.currentAudioElement = null;
-              if (options.onEnd) options.onEnd();
+              if (reqId === this.activeRequestId) {
+                this.isSpeaking = false;
+                this.isPaused = false;
+                this.currentAudioElement = null;
+                if (options.onEnd) options.onEnd();
+              }
             };
-            audio.onerror = () => {
-              this.isSpeaking = false;
-              this.currentAudioElement = null;
-              this.fallbackClientSpeak(cleanedText, options);
+            audio.onerror = (err) => {
+              if (reqId === this.activeRequestId) {
+                this.isSpeaking = false;
+                this.currentAudioElement = null;
+                if (options.onError) options.onError(err);
+              }
             };
 
-            audio.play().catch(() => {
-              this.fallbackClientSpeak(cleanedText, options);
+            audio.play().catch((err) => {
+              // Ignore intentional interruptions from user changing steps
+              if (err?.name === 'AbortError') return;
+              if (reqId === this.activeRequestId) {
+                this.isSpeaking = false;
+                this.currentAudioElement = null;
+                if (options.onError) options.onError(err);
+              }
             });
             return;
           }
 
-          this.fallbackClientSpeak(cleanedText, options);
+          if (reqId === this.activeRequestId) {
+            this.isSpeaking = false;
+            if (options.onError) options.onError(new Error('Audio data empty'));
+          }
         })
-        .catch(() => {
-          this.fallbackClientSpeak(cleanedText, options);
+        .catch((err) => {
+          if (err?.name === 'AbortError') return;
+          if (reqId === this.activeRequestId) {
+            this.isSpeaking = false;
+            if (options.onError) options.onError(err);
+          }
         });
       return true;
     }
 
-    return this.fallbackClientSpeak(cleanedText, options);
+    return false;
   }
 
   /**
@@ -464,13 +561,27 @@ export class AudioSpeechEngine {
   }
 
   public stop() {
+    this.activeRequestId++;
+    if (this.activeAbortController) {
+      try {
+        this.activeAbortController.abort();
+      } catch {}
+      this.activeAbortController = null;
+    }
     if (this.currentAudioElement) {
-      this.currentAudioElement.pause();
-      this.currentAudioElement.currentTime = 0;
+      this.currentAudioElement.onplay = null;
+      this.currentAudioElement.onended = null;
+      this.currentAudioElement.onerror = null;
+      try {
+        this.currentAudioElement.pause();
+        this.currentAudioElement.currentTime = 0;
+      } catch {}
       this.currentAudioElement = null;
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
     }
     this.isSpeaking = false;
     this.isPaused = false;
@@ -485,21 +596,59 @@ export class AudioSpeechEngine {
   }
 
   /**
-   * Dedicated Test Voice function
+   * Dedicated Test Voice function with multi-dialect and engine preview
    */
   public testSample(
     persona: VoicePersona = 'male',
     voiceId: string = '',
     rate: number = 1.0,
+    dialectOrCallbacks?: ArabicDialect | { onStart?: () => void; onEnd?: () => void; onError?: (err: any) => void },
+    engineOrCallbacks?: VoiceEngineType | { onStart?: () => void; onEnd?: () => void; onError?: (err: any) => void },
     callbacks?: { onStart?: () => void; onEnd?: () => void; onError?: (err: any) => void }
   ) {
-    const sampleText = `أهلاً بكم يا باشمهندسين في منصة دكتور الميكاترونكس الذكي. هذا هو الصوت العربي الأصلي الطبيعي بدون أي تكسير في اللغة، ونحن جاهزون لبدء شرح المحاضرات الهندسية والسبورة الذكية بكل وضوح وسلاسة.`;
+    let dialect: ArabicDialect = 'yemeni';
+    let engine: VoiceEngineType = 'native_hd';
+    let actualCallbacks = callbacks;
+
+    if (dialectOrCallbacks && typeof dialectOrCallbacks === 'object') {
+      actualCallbacks = dialectOrCallbacks;
+    } else if (typeof dialectOrCallbacks === 'string') {
+      dialect = dialectOrCallbacks as ArabicDialect;
+    }
+
+    if (engineOrCallbacks && typeof engineOrCallbacks === 'object') {
+      actualCallbacks = engineOrCallbacks;
+    } else if (typeof engineOrCallbacks === 'string') {
+      engine = engineOrCallbacks as VoiceEngineType;
+    }
+
+    let sampleText = '';
+    switch (dialect) {
+      case 'standard':
+        sampleText = 'أهلاً ومرحباً بكم أعزائي المهندسين في منصة دكتور الميكاترونكس الذكي. هذا هو الصوت العربي الفصيح الأصلي بدون أي تكسير، ونحن جاهزون لشرح المحاضرات الهندسية والسبورة التفاعلية بكل دقة وإتقان.';
+        break;
+      case 'egyptian':
+        sampleText = 'أهلاً بيكم يا باشمهندسين ومنورين منصة دكتور الميكاترونكس الذكي. ده الصوت العربي الأصلي بالشرح الهندسي السلس، وجاهزين نبدأ سوا فهم القوانين والدوائر الكهربائية خطوة بخطوة وببساطة.';
+        break;
+      case 'gulf':
+        sampleText = 'يا هلا ومرحبابكم يا مهندسي المستقبل في منصة دكتور الميكاترونكس الذكي. هذا هو الصوت العربي الأصلي الرصين، ونسعد بشرح الدروس الهندسية والأنظمة الذكية بوضوح وإتقان.';
+        break;
+      case 'levantine':
+        sampleText = 'مية أهلاً وسهلاً فيكم يا مهندسين بمنصة دكتور الميكاترونكس الذكي. هاد الصوت العربي الأصلي باللهجة التعليمية السلسة، وجاهزين لنبلش سوا بشرح المحاضرات والمفاهيم الهندسية خطوة بخطوة.';
+        break;
+      case 'yemeni':
+      default:
+        sampleText = 'حياكم الله يا شباب ويا باشمهندسين في منصة دكتور الميكاترونكس الذكي. هذا هو الصوت العربي الأصلي باللهجة اليمنية الأكاديمية وبدون أي تكسير، ونحن جاهزون لشرح المحاضرات والمسائل الهندسية.';
+        break;
+    }
+
     return this.speak(sampleText, {
       persona,
       voiceId,
       rate,
-      dialect: 'yemeni',
-      ...callbacks,
+      dialect,
+      engine,
+      ...actualCallbacks,
     });
   }
 }

@@ -106,6 +106,10 @@ export interface StudentProfile {
   bookmarks: { id: string; title: string; type: string; urlOrRef: string }[];
   soundEnabled: boolean;
   speechRate: number;
+  voicePersona?: 'male' | 'female' | 'device_default';
+  preferredDialect?: 'yemeni' | 'standard' | 'egyptian' | 'gulf' | 'levantine';
+  preferredVoiceEngine?: 'native_hd' | 'fenrir_male' | 'neural_female' | 'device_tts';
+  selectedVoiceId?: string;
   subscriptionTier?: 'free' | 'basic' | 'premium_pro';
   subscriptionStatus?: 'active' | 'expired' | 'trial';
   subscriptionExpiresAt?: string;

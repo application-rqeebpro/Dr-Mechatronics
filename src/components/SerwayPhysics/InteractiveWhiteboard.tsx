@@ -236,11 +236,24 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
   const playCurrentSpokenStep = (text: string) => {
     if (!voiceEnabled) return;
 
+    let studentPref: any = null;
+    try {
+      const saved = localStorage.getItem('mechatronics_student_profile');
+      if (saved) studentPref = JSON.parse(saved);
+    } catch {}
+
+    const dialect = studentPref?.preferredDialect || 'yemeni';
+    const engine = studentPref?.preferredVoiceEngine || 'native_hd';
+    const persona = studentPref?.voicePersona || voicePersona;
+    const voiceId = studentPref?.selectedVoiceId || selectedVoiceId;
+    const rate = studentPref?.speechRate || speed;
+
     audioEngine.speak(text, {
-      persona: voicePersona,
-      voiceId: selectedVoiceId,
-      rate: speed,
-      dialect: 'yemeni',
+      persona,
+      voiceId,
+      rate,
+      dialect,
+      engine,
       onStart: () => setIsSpeakingAudio(true),
       onEnd: () => setIsSpeakingAudio(false),
       onError: () => setIsSpeakingAudio(false),
@@ -267,7 +280,7 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
     setPenPos({ x: 75, y: Math.min(targetY, 82) });
   }, [currentStepIndex, showFullSolution, isPlaying]);
 
-  // Writing progression timer
+  // Writing progression timer - synchronizes pen writing with voice
   useEffect(() => {
     if (!isPlaying || showFullSolution) {
       setIsPenWriting(false);
@@ -287,23 +300,32 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
       return () => clearTimeout(timer);
     } else {
       setIsPenWriting(false);
-      // Auto-advance after step narration completes
-      const pauseDuration = Math.floor(3000 / speed);
+      // Strictly prevent auto-advance while the audio explanation is still speaking
+      if (isSpeakingAudio) {
+        return;
+      }
+      // Auto-advance after step narration and writing have completely finished
+      const pauseDuration = Math.floor(1500 / speed);
       const nextTimer = setTimeout(() => {
         if (isPlaying && currentStepIndex < steps.length - 1) {
+          audioEngine.stop();
+          setIsSpeakingAudio(false);
           setCurrentStepIndex((prev) => prev + 1);
         } else if (currentStepIndex === steps.length - 1) {
           setIsPlaying(false);
+          audioEngine.stop();
+          setIsSpeakingAudio(false);
         }
       }, pauseDuration);
       return () => clearTimeout(nextTimer);
     }
-  }, [revealedCharCount, isPlaying, speed, fullTextToAnimate.length, currentStepIndex, steps.length, showFullSolution]);
+  }, [revealedCharCount, isPlaying, isSpeakingAudio, speed, fullTextToAnimate.length, currentStepIndex, steps.length, showFullSolution]);
 
   // Clean up audio on unmount
   useEffect(() => {
     return () => {
       audioEngine.stop();
+      setIsSpeakingAudio(false);
     };
   }, []);
 
@@ -315,32 +337,39 @@ export const InteractiveWhiteboard: React.FC<InteractiveWhiteboardProps> = ({
     return () => unsub();
   }, []);
 
-  // Control Handlers
+  // Control Handlers with strict speech isolation (prevents any overlapping voices)
   const handleTogglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
-      audioEngine.pause();
+      audioEngine.stop();
       setIsSpeakingAudio(false);
     } else {
+      audioEngine.stop();
+      setIsSpeakingAudio(false);
       setIsPlaying(true);
-      audioEngine.resume();
       playCurrentSpokenStep(activeStep.spokenExplanation);
     }
   };
 
   const handleNextStep = () => {
     if (currentStepIndex < steps.length - 1) {
+      audioEngine.stop();
+      setIsSpeakingAudio(false);
       setCurrentStepIndex((prev) => prev + 1);
     }
   };
 
   const handlePrevStep = () => {
     if (currentStepIndex > 0) {
+      audioEngine.stop();
+      setIsSpeakingAudio(false);
       setCurrentStepIndex((prev) => prev - 1);
     }
   };
 
   const handleReplayCurrentStep = () => {
+    audioEngine.stop();
+    setIsSpeakingAudio(false);
     setShowFullSolution(false);
     setRevealedCharCount(0);
     setIsPlaying(true);

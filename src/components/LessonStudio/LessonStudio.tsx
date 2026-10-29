@@ -312,12 +312,26 @@ export const LessonStudio: React.FC<Props> = ({ initialLectureToOpen, onClearIni
     if (!lectureData || !lectureData.scenes[activeSceneIndex]) return;
 
     const currentScene = lectureData.scenes[activeSceneIndex];
+    let studentPref: any = null;
+    try {
+      const saved = localStorage.getItem('mechatronics_student_profile');
+      if (saved) studentPref = JSON.parse(saved);
+    } catch {}
+
+    const dialect = studentPref?.preferredDialect || 'yemeni';
+    const engine = studentPref?.preferredVoiceEngine || 'native_hd';
+    const persona = studentPref?.voicePersona || voicePersona;
+    const voiceId = studentPref?.selectedVoiceId || selectedVoiceId;
+    const rate = studentPref?.speechRate || playbackSpeed;
+
     const textToSpeak = `${currentScene.title}. ${currentScene.professorSpeech}`;
 
     audioEngine.speak(textToSpeak, {
-      persona: voicePersona,
-      voiceId: selectedVoiceId,
-      rate: playbackSpeed,
+      persona,
+      voiceId,
+      rate,
+      dialect,
+      engine,
       onStart: () => {
         setIsAudioSpeaking(true);
         setIsAudioPaused(false);
@@ -343,13 +357,27 @@ export const LessonStudio: React.FC<Props> = ({ initialLectureToOpen, onClearIni
     handleStopSpeech();
     if (!lectureData || !lectureData.scenes[activeSceneIndex]) return;
 
+    let studentPref: any = null;
+    try {
+      const saved = localStorage.getItem('mechatronics_student_profile');
+      if (saved) studentPref = JSON.parse(saved);
+    } catch {}
+
+    const dialect = studentPref?.preferredDialect || 'yemeni';
+    const engine = studentPref?.preferredVoiceEngine || 'native_hd';
+    const persona = studentPref?.voicePersona || voicePersona;
+    const voiceId = studentPref?.selectedVoiceId || selectedVoiceId;
+    const rate = studentPref?.speechRate || playbackSpeed;
+
     const currentScene = lectureData.scenes[activeSceneIndex];
     const textToSpeak = `إعادة شرح الخطوة: ${currentScene.title}. ${currentScene.professorSpeech}`;
 
     audioEngine.speak(textToSpeak, {
-      persona: voicePersona,
-      voiceId: selectedVoiceId,
-      rate: playbackSpeed,
+      persona,
+      voiceId,
+      rate,
+      dialect,
+      engine,
       onStart: () => {
         setIsAudioSpeaking(true);
         setIsAudioPaused(false);

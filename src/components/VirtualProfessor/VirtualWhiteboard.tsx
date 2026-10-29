@@ -142,11 +142,25 @@ export const VirtualWhiteboard: React.FC<Props> = ({ onNavigateToStudio }) => {
 
     if (!currentScene) return;
 
+    let studentPref: any = null;
+    try {
+      const saved = localStorage.getItem('mechatronics_student_profile');
+      if (saved) studentPref = JSON.parse(saved);
+    } catch {}
+
+    const dialect = studentPref?.preferredDialect || 'yemeni';
+    const engine = studentPref?.preferredVoiceEngine || 'native_hd';
+    const persona = studentPref?.voicePersona || voicePersona;
+    const voiceId = studentPref?.selectedVoiceId || selectedVoiceId;
+    const rate = studentPref?.speechRate || speechRate;
+
     const textToSpeak = `${currentScene.title}. ${currentScene.professorSpeech}`;
     audioEngine.speak(textToSpeak, {
-      persona: voicePersona,
-      voiceId: selectedVoiceId,
-      rate: speechRate,
+      persona,
+      voiceId,
+      rate,
+      dialect,
+      engine,
       onStart: () => {
         setIsSpeaking(true);
         setIsPaused(false);
