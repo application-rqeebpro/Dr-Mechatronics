@@ -16,6 +16,7 @@ import {
   Download,
   KeyRound,
   CheckCircle2,
+  Zap,
 } from 'lucide-react';
 
 interface Props {
@@ -333,6 +334,82 @@ export const AdminPortal: React.FC<Props> = ({ settings, onUpdateSettings }) => 
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* DC Virtual Laboratory Management Section (Fiore Manual) */}
+      <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              إدارة المختبر الكهربائي الافتراضي DC (James M. Fiore Lab Management)
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              تفعيل وتعطيل التجارب الخمس عشرة، مراجعة تقارير الطلاب المنجزة، وإدارة المحتوى المخبري
+            </p>
+          </div>
+          <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-cyan-950 text-cyan-300 border border-cyan-800">
+            15 تجربة معتمدة
+          </span>
+        </div>
+
+        {/* 15 Experiments Quick Toggle & Status */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-slate-700">
+          {[
+            { num: 1, title: 'المختبر وإجراءات السلامة' },
+            { num: 2, title: 'مصادر التيار المستمر والقياس' },
+            { num: 3, title: 'شفرة ألوان المقاومات' },
+            { num: 4, title: 'قانون أوم' },
+            { num: 5, title: 'دوائر التوالي' },
+            { num: 6, title: 'دوائر التوازي' },
+            { num: 7, title: 'دوائر التوالي والتوازي المركبة' },
+            { num: 8, title: 'دوائر السلم والجسور' },
+            { num: 9, title: 'المقاومات المتغيرة والريوستات' },
+            { num: 10, title: 'نظرية التراكب' },
+            { num: 11, title: 'نظرية ثيفينن' },
+            { num: 12, title: 'نقل القدرة العظمى' },
+            { num: 13, title: 'التحليل بالعقد' },
+            { num: 14, title: 'التحليل بالمسارات' },
+            { num: 15, title: 'المكثفات والملفات' },
+          ].map((exp) => (
+            <div
+              key={exp.num}
+              className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+            >
+              <div className="truncate me-2">
+                <span className="text-cyan-400 font-bold me-1.5">#{exp.num}</span>
+                <span className="text-slate-200">{exp.title}</span>
+              </div>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">
+                مفعلة
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Student Reports Summary */}
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800/80">
+          <span>التقارير المخبرية المسجلة سحابياً ومحلياً للطلاب: <strong>مفعل ومحمي</strong></span>
+          <button
+            onClick={() => {
+              const reports = localStorage.getItem('mechatronics_dc_lab_reports');
+              if (reports) {
+                const blob = new Blob([reports], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `student_dc_lab_reports_${Date.now()}.json`;
+                a.click();
+              } else {
+                alert('لا توجد تقارير مخبرية مسجلة بعد.');
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-900/60 hover:bg-cyan-800 text-cyan-300 border border-cyan-500/30 rounded-xl font-bold transition-all text-xs"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>تصدير تقارير تجارب الطلاب (JSON)</span>
+          </button>
         </div>
       </div>
 

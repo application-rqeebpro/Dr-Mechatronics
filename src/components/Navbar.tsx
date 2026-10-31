@@ -16,6 +16,8 @@ import {
   FolderOpen,
   Download,
   Smartphone,
+  Zap,
+  Cpu,
 } from 'lucide-react';
 
 interface Props {
@@ -30,6 +32,9 @@ export const Navbar: React.FC<Props> = ({ activeTab, onSelectTab, lang, onToggle
 
   const navItems: { id: MainTab; nameAr: string; nameEn: string; icon: React.FC<any> }[] = [
     { id: 'home', nameAr: 'الرئيسية', nameEn: 'Home', icon: GraduationCap },
+    { id: 'circuit-wizard', nameAr: 'المختبر الذكي Circuit Wizard', nameEn: 'Circuit Wizard', icon: Sparkles },
+    { id: 'virtual-breadboard', nameAr: 'لوحة التجارب (Breadboard)', nameEn: 'Virtual Breadboard', icon: Cpu },
+    { id: 'dc-lab', nameAr: 'المختبر الافتراضي DC', nameEn: 'DC Lab (Fiore)', icon: Zap },
     { id: 'serway-physics', nameAr: 'السبورة وشرح كتاب Serway', nameEn: 'Serway & Board', icon: BookOpen },
     { id: 'lesson-studio', nameAr: 'استوديو الدروس', nameEn: 'Studio', icon: Clapperboard },
     { id: 'my-lectures', nameAr: 'محاضراتي', nameEn: 'My Lectures', icon: FolderOpen },
@@ -83,7 +88,7 @@ export const Navbar: React.FC<Props> = ({ activeTab, onSelectTab, lang, onToggle
 
           {/* Desktop Navigation Links */}
           <nav className="hidden xl:flex items-center gap-1">
-            {navItems.slice(0, 7).map((item) => {
+            {navItems.slice(0, 8).map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (

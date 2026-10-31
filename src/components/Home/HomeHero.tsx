@@ -30,6 +30,33 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
 
   const services = [
     {
+      id: 'circuit-wizard' as MainTab,
+      title: 'بيئة المختبر الذكي Circuit Wizard Studio',
+      titleEn: 'Circuit Wizard CAD & PCB Simulation Suite',
+      desc: 'بيئة هندسية متكاملة تحاكي برنامج Circuit Wizard بكامل تفاصيله: وضع مستويات الجهد Voltage Levels، سريان التيار Current Flow، طباعة اللوحات المطبوعة PCB، المخطط المنطقي Flowchart لبرمجة GENIE PIC، ومكتبة القطع كاملة.',
+      icon: Sparkles,
+      color: 'from-purple-500/20 to-indigo-600/20 text-purple-400 border-purple-500/30',
+      badge: 'جديد: Circuit Wizard CAD & PCB',
+    },
+    {
+      id: 'virtual-breadboard' as MainTab,
+      title: 'لوحة التجارب العملية الافتراضية (Breadboard)',
+      titleEn: 'Virtual Breadboard & Electronics Lab',
+      desc: 'مساحة عمل تفاعلية تحاكي لوحة التجارب الإلكترونية الحقيقية (830 نقطة): سحب وإفلات العناصر، مد وتوصيل الأسلاك بحرية، محاكاة كهربائية حقيقية بـ MNA، راسم إشارة Oscilloscope، وميزة حوّل محاضرتك إلى تجربة.',
+      icon: Cpu,
+      color: 'from-emerald-500/20 to-teal-600/20 text-emerald-400 border-emerald-500/30',
+      badge: 'جديد: Breadboard 830 نقطة + راسم إشارة',
+    },
+    {
+      id: 'dc-lab' as MainTab,
+      title: 'المختبر الكهربائي الافتراضي DC (دليل James M. Fiore)',
+      titleEn: 'DC Circuit Analysis Virtual Lab',
+      desc: 'مختبر هندسي تفاعلي يحاكي 15 تجربة جامعية: قانون أوم، كيرشوف، التوالي والتوازي، الجسور، ثيفينن، التراكب، نقل القدرة العظمى، والتحليل بالعقد والمسارات.',
+      icon: Zap,
+      color: 'from-cyan-500/20 to-blue-600/20 text-cyan-400 border-cyan-500/30',
+      badge: 'جديد: 15 تجربة حقيقية + تقارير',
+    },
+    {
       id: 'serway-physics' as MainTab,
       title: 'شرح كتاب Serway مع د. محمد الحبابي',
       titleEn: 'Serway Physics with Dr. Al-Hababi',
@@ -107,7 +134,13 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
     e.preventDefault();
     if (!searchVal.trim()) return;
     const q = searchVal.toLowerCase();
-    if (q.includes('سيرواي') || q.includes('serway') || q.includes('فيزياء') || q.includes('physics')) {
+    if (q.includes('wizard') || q.includes('سيركيت') || q.includes('معالج') || q.includes('pcb') || q.includes('flowchart') || q.includes('genie')) {
+      onNavigate('circuit-wizard');
+    } else if (q.includes('breadboard') || q.includes('لوحة تجارب') || q.includes('تجارب عملية') || q.includes('بريدبورد') || q.includes('راسم إشارة') || q.includes('oscilloscope')) {
+      onNavigate('virtual-breadboard');
+    } else if (q.includes('dc') || q.includes('فيوري') || q.includes('fiore') || q.includes('دوائر مستمر') || q.includes('ثيفينن') || q.includes('تراكب')) {
+      onNavigate('dc-lab');
+    } else if (q.includes('سيرواي') || q.includes('serway') || q.includes('فيزياء') || q.includes('physics')) {
       onNavigate('serway-physics');
     } else if (q.includes('حاسب') || q.includes('calc') || q.includes('عزم') || q.includes('أوم')) {
       onNavigate('calculators');
@@ -141,7 +174,7 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
                 alt="Teacher Icon"
                 className="w-5 h-5 rounded-full object-cover border border-cyan-400"
               />
-              <span>الأستاذ الأكاديمي الافتراضي • بصوت ذكوري ونظام سبورة تفاعلي</span>
+              <span>الأستاذ الأكاديمي الافتراضي • بصوت ذكوري ونظام سبورة ومختبر تفاعلي</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
@@ -152,14 +185,34 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-              منصة هندسية تعليمية تجمع بين الأستاذ الافتراضي، والسبورة التفاعلية الحية، ومحاكاة دوائر التيار المتردد والروبوتات، وشرح كتاب Serway للفيزياء الهندسية.
+              منصة هندسية متكاملة تجمع بين بيئة Circuit Wizard CAD، ولوحة التجارب الحرة (Breadboard 830 نقطة)، والمختبر الأكاديمي لتحليل الدوائر DC (دليل Fiore).
             </p>
 
             {/* Quick Actions & PWA Install */}
             <div className="flex flex-wrap items-center gap-3">
               <button
+                onClick={() => onNavigate('circuit-wizard')}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-purple-600/30 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>🧙‍♂️ المختبر الذكي (Circuit Wizard)</span>
+              </button>              <button
+                onClick={() => onNavigate('virtual-breadboard')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/25 active:scale-95"
+              >
+                <Cpu className="w-4 h-4" />
+                <span>🔌 Breadboard</span>
+              </button>
+              <button
+                onClick={() => onNavigate('dc-lab')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-cyan-500/25 active:scale-95"
+              >
+                <Zap className="w-4 h-4 fill-current" />
+                <span>⚡ مختبر DC (Fiore)</span>
+              </button>
+              <button
                 onClick={() => onNavigate('serway-physics')}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20"
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>شرح كتاب Serway</span>
@@ -168,10 +221,10 @@ export const HomeHero: React.FC<Props> = ({ onNavigate, lang }) => {
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('trigger-pwa-install'));
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/40 font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-cyan-950/40"
+                className="flex items-center gap-2 px-3 py-2.5 bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-500/40 font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-cyan-950/40 active:scale-95"
               >
                 <Smartphone className="w-4 h-4 text-cyan-400" />
-                <span>📲 تثبيت التطبيق على الجوال</span>
+                <span>📲 تثبيت التطبيق</span>
               </button>
             </div>
 

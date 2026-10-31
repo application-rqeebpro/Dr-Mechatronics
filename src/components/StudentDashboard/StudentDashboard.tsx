@@ -337,6 +337,34 @@ export const StudentDashboard: React.FC<Props> = ({ profile, onUpdateProfile }) 
               </div>
             </div>
           </div>
+
+          {/* DC Circuit Analysis Lab Progress & Certificate Badge */}
+          <div className="p-5 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-cyan-400" />
+                <h4 className="font-bold text-sm text-white">
+                  مختبر تحليل الدوائر الكهربائية DC (دليل James M. Fiore)
+                </h4>
+              </div>
+              <span className="text-xs font-mono text-cyan-300 bg-cyan-950 px-2.5 py-0.5 rounded-full border border-cyan-800">
+                15 تجربة جامعية
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              يشمل تجارب السلامة، قانون أوم، التوالي والتوازي، الجسور، مقاييس الجهد، نظرية التراكب، ثيفينن، أقصى قدرة، العقد والمسارات، وشحن وتفريغ المكثفات والملفات.
+            </p>
+
+            <div className="pt-1 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <span className="text-slate-300">
+                الشهادة الأكاديمية: <strong className="text-emerald-400">متاحة فور إكمال تقارير التجارب</strong>
+              </span>
+              <span className="text-slate-400 font-mono text-[11px]">
+                تم التحقق وفق معايير كتاب DC Circuit Analysis Laboratory Manual
+              </span>
+            </div>
+          </div>
         </div>
       )}
 

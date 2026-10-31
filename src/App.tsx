@@ -14,6 +14,9 @@ import { QuizzesHub } from './components/Quizzes/QuizzesHub';
 import { StudentDashboard } from './components/StudentDashboard/StudentDashboard';
 import { AdminPortal } from './components/AdminPortal/AdminPortal';
 import { SerwayPhysicsHub } from './components/SerwayPhysics/SerwayPhysicsHub';
+import { DCLabHub } from './components/DCLab/DCLabHub';
+import { VirtualElectronicsLabHub } from './components/VirtualBreadboard/VirtualElectronicsLabHub';
+import { CircuitWizardHub } from './components/CircuitWizard/CircuitWizardHub';
 import { Bot, Heart, Shield, Terminal, Waves, Cpu, Zap, BookOpen } from 'lucide-react';
 
 export default function App() {
@@ -111,6 +114,18 @@ export default function App() {
       {/* Main Body Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-x-hidden min-w-0">
         {activeTab === 'home' && <HomeHero onNavigate={setActiveTab} lang={lang} />}
+        {activeTab === 'circuit-wizard' && (
+          <CircuitWizardHub
+            onNavigateToBreadboard={() => setActiveTab('virtual-breadboard')}
+            onNavigateToFioreLab={() => setActiveTab('dc-lab')}
+          />
+        )}
+        {activeTab === 'virtual-breadboard' && (
+          <VirtualElectronicsLabHub onNavigateToFioreLab={() => setActiveTab('dc-lab')} />
+        )}
+        {activeTab === 'dc-lab' && (
+          <DCLabHub onNavigateToBreadboard={() => setActiveTab('virtual-breadboard')} />
+        )}
         {activeTab === 'serway-physics' && <SerwayPhysicsHub />}
         {activeTab === 'professors' && (
           <VirtualWhiteboard onNavigateToStudio={() => setActiveTab('lesson-studio')} />
@@ -161,7 +176,17 @@ export default function App() {
               <span className="font-bold text-slate-200 block uppercase">الخدمات الأساسية</span>
               <ul className="space-y-1.5">
                 <li>
-                  <button onClick={() => setActiveTab('serway-physics')} className="hover:text-cyan-400 transition-colors font-medium text-cyan-300">
+                  <button onClick={() => setActiveTab('virtual-breadboard')} className="hover:text-emerald-400 transition-colors font-medium text-emerald-300">
+                    🔌 لوحة التجارب الحرة (Breadboard 830)
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('dc-lab')} className="hover:text-cyan-400 transition-colors font-medium text-cyan-300">
+                    ⚡ المختبر الافتراضي DC (دليل Fiore)
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setActiveTab('serway-physics')} className="hover:text-cyan-400 transition-colors">
                     شرح كتاب Serway (د. محمد الحبابي)
                   </button>
                 </li>

@@ -2,6 +2,9 @@ export type Language = 'ar' | 'en';
 
 export type MainTab =
   | 'home'
+  | 'circuit-wizard'
+  | 'virtual-breadboard'
+  | 'dc-lab'
   | 'serway-physics'
   | 'lesson-studio'
   | 'my-lectures'
@@ -134,6 +137,8 @@ export interface AdminSettings {
   isVoiceEnabled: boolean;
   isVideoStudioEnabled: boolean;
   isLabsEnabled: boolean;
+  isDcLabEnabled?: boolean;
+  disabledDcExperiments?: number[];
   isCalculatorsEnabled: boolean;
   externalVideoApiKey?: string;
   externalVideoProvider?: string;
